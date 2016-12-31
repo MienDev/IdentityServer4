@@ -15,7 +15,11 @@ using System.Threading.Tasks;
 
 namespace IdentityServer4.ResponseHandling
 {
-    class AuthorizeInteractionResponseGenerator : IAuthorizeInteractionResponseGenerator
+    /// <summary>
+    /// Default logic for determining if user must login or consent when making requests to the authorization endpoint.
+    /// </summary>
+    /// <seealso cref="IdentityServer4.ResponseHandling.IAuthorizeInteractionResponseGenerator" />
+    public class AuthorizeInteractionResponseGenerator : IAuthorizeInteractionResponseGenerator
     {
         private readonly ILogger<AuthorizeInteractionResponseGenerator> _logger;
         private readonly IConsentService _consent;
@@ -32,7 +36,13 @@ namespace IdentityServer4.ResponseHandling
             _profile = profile;
         }
 
-        public async Task<InteractionResponse> ProcessInteractionAsync(ValidatedAuthorizeRequest request, ConsentResponse consent = null)
+        /// <summary>
+        /// Processes the interaction logic.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="consent">The consent.</param>
+        /// <returns></returns>
+        public virtual async Task<InteractionResponse> ProcessInteractionAsync(ValidatedAuthorizeRequest request, ConsentResponse consent = null)
         {
             _logger.LogTrace("ProcessInteractionAsync");
 
@@ -45,28 +55,34 @@ namespace IdentityServer4.ResponseHandling
             return await ProcessConsentAsync(request, consent);
         }
 
-        internal async Task<InteractionResponse> ProcessLoginAsync(ValidatedAuthorizeRequest request)
+        /// <summary>
+        /// Processes the login logic.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns></returns>
+        protected internal virtual async Task<InteractionResponse> ProcessLoginAsync(ValidatedAuthorizeRequest request)
         {
-            if (request.PromptMode == OidcConstants.PromptModes.Login)
+            if (request.PromptMode == OidcConstants.PromptModes.Login ||
+                request.PromptMode == OidcConstants.PromptModes.SelectAccount)
             {
                 // remove prompt so when we redirect back in from login page
                 // we won't think we need to force a prompt again
                 request.RemovePrompt();
 
-                _logger.LogInformation("Showing login: request contains prompt=login");
+                _logger.LogInformation("Showing login: request contains prompt={0}", request.PromptMode);
 
                 return new InteractionResponse() { IsLogin = true };
             }
 
             // unauthenticated user
-            var isAuthenticated = request.Subject.Identity.IsAuthenticated;
+            var isAuthenticated = request.Subject.IsAuthenticated();
             
             // user de-activated
             bool isActive = false;
 
             if (isAuthenticated)
             {
-                var isActiveCtx = new IsActiveContext(request.Subject, request.Client);
+                var isActiveCtx = new IsActiveContext(request.Subject, request.Client, IdentityServerConstants.ProfileIsActiveCallers.AuthorizeEndpoint);
                 await _profile.IsActiveAsync(isActiveCtx);
                 
                 isActive = isActiveCtx.IsActive;
@@ -122,7 +138,7 @@ namespace IdentityServer4.ResponseHandling
             if (request.MaxAge.HasValue)
             {
                 var authTime = request.Subject.GetAuthenticationTime();
-                if (DateTimeHelper.UtcNow > authTime.AddSeconds(request.MaxAge.Value))
+                if (IdentityServerDateTime.UtcNow > authTime.AddSeconds(request.MaxAge.Value))
                 {
                     _logger.LogInformation("Showing login: Requested MaxAge exceeded.");
 
@@ -131,7 +147,7 @@ namespace IdentityServer4.ResponseHandling
             }
 
             // check local idp restrictions
-            if (currentIdp == Constants.LocalIdentityProvider && !request.Client.EnableLocalLogin)
+            if (currentIdp == IdentityServerConstants.LocalIdentityProvider && !request.Client.EnableLocalLogin)
             {
                 _logger.LogInformation("Showing login: User logged in locally, but client does not allow local logins");
                 return new InteractionResponse() { IsLogin = true };
@@ -150,9 +166,17 @@ namespace IdentityServer4.ResponseHandling
             return new InteractionResponse();
         }
 
-        internal async Task<InteractionResponse> ProcessConsentAsync(ValidatedAuthorizeRequest request, ConsentResponse consent = null)
+        /// <summary>
+        /// Processes the consent logic.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <param name="consent">The consent.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException">Invalid PromptMode</exception>
+        protected internal virtual async Task<InteractionResponse> ProcessConsentAsync(ValidatedAuthorizeRequest request, ConsentResponse consent = null)
         {
-            if (request == null) throw new ArgumentNullException("request");
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             if (request.PromptMode != null &&
                 request.PromptMode != OidcConstants.PromptModes.None &&
@@ -220,7 +244,7 @@ namespace IdentityServer4.ResponseHandling
                                 if (consent.RememberConsent)
                                 {
                                     // remember what user actually selected
-                                    scopes = request.ValidatedScopes.GrantedScopes.Select(x => x.Name);
+                                    scopes = request.ValidatedScopes.GrantedResources.ToScopeNames();
                                     _logger.LogDebug("User indicated to remember consent for scopes: {scopes}", scopes);
                                 }
 

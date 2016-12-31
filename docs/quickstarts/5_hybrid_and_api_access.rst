@@ -1,3 +1,4 @@
+.. _refHybridQuickstart:
 Switching to Hybrid Flow and adding API Access back
 ===================================================
 
@@ -33,31 +34,23 @@ this allows requesting refresh tokens for long lived API access::
         ClientName = "MVC Client",
         AllowedGrantTypes = GrantTypes.HybridAndClientCredentials,
 
-        ClientSecrets = new List<Secret>
+        ClientSecrets = 
         {
             new Secret("secret".Sha256())
         },
 
-        RedirectUris = new List<string>
-        {
-            "http://localhost:5002/signin-oidc"
-        },
-        PostLogoutRedirectUris = new List<string>
-        {
-            "http://localhost:5002"
-        },
+        RedirectUris           = { "http://localhost:5002/signin-oidc" },
+        PostLogoutRedirectUris = { "http://localhost:5002" },
 
-        AllowedScopes = new List<string>
+        AllowedScopes = 
         {
-            StandardScopes.OpenId.Name,
-            StandardScopes.Profile.Name,
-            StandardScopes.OfflineAccess.Name,
+            IdentityServerConstants.StandardScopes.OpenId,
+            IdentityServerConstants.StandardScopes.Profile,
             "api1"
-        }
+        },
+        AllowOfflineAccess = true
     }
 };
-
-.. note:: Don't forget to register ``StandardScopes.OfflineAccess`` in your scopes configuration.
 
 Modifying the MVC client
 ^^^^^^^^^^^^^^^^^^^^^^^^

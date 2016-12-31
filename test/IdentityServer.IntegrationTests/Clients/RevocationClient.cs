@@ -3,17 +3,10 @@
 
 
 using FluentAssertions;
-using IdentityModel;
 using IdentityModel.Client;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -43,7 +36,7 @@ namespace IdentityServer4.IntegrationTests.Clients
         {
             var introspectionClient = new IntrospectionClient(
                 IntrospectionEndpoint,
-                "api1",
+                "api",
                 "secret",
                 innerHttpMessageHandler: _handler);
 

@@ -165,7 +165,7 @@ namespace IdentityServer4.UnitTests.Endpoints.Authorize
             ((AuthorizeResult)result).Response.IsError.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Skip = "bring back events in 1.1")]
         [Trait("Category", Category)]
         public async Task authorize_request_validation_produces_error_should_raise_failed_endpoint_event()
         {
@@ -193,7 +193,7 @@ namespace IdentityServer4.UnitTests.Endpoints.Authorize
             ((AuthorizeResult)result).Response.IsError.Should().BeTrue();
         }
 
-        [Fact]
+        [Fact(Skip = "bring back events in 1.1")]
         [Trait("Category", Category)]
         public async Task interaction_produces_error_should_raise_failed_endpoint_event()
         {
@@ -362,6 +362,18 @@ namespace IdentityServer4.UnitTests.Endpoints.Authorize
             var result = await _subject.ProcessAuthorizeAfterConsentAsync(_context);
 
             _mockUserConsentResponseMessageStore.Messages.Count.Should().Be(0);
+        }
+
+        [Fact]
+        [Trait("Category", Category)]
+        public async Task ProcessAuthorizeRequestAsync_custom_interaction_redirect_result_should_issue_redirect()
+        {
+            _context.SetUser(_user);
+            _stubInteractionGenerator.Response.RedirectUrl = "http://foo.com";
+
+            var result = await _subject.ProcessAuthorizeRequestAsync(_params, _user, null);
+
+            result.Should().BeOfType<CustomRedirectResult>();
         }
     }
 }

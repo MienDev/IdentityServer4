@@ -20,11 +20,14 @@ Basics
     Specifies the grant types the client is allowed to use. Use the ``GrantTypes`` class for common combinations.
 ``RequirePkce``
     Specifies whether clients using an authorization code based grant type must send a proof key
+``AllowPlainTextPkce``
+    Specifies whether clients using PKCE can use a plain text code challenge (not recommended - and default to ``false``)
 ``RedirectUris``
     Specifies the allowed URIs to return tokens or authorization codes to
 ``AllowedScopes``
-    By default a client has no access to any scopes - either specify the scopes explicitly here (recommended) - 
-    or set ``AllowAccessToAllScopes`` to true.
+    By default a client has no access to any resources - specify the allowed resources by adding the corresponding scopes names
+``AllowOfflineAccess``
+    Specifies whether this client can request refresh tokens (be requesting the ``offline_access`` scope)
 ``AllowAccessTokenViaBrowser``
     Specifies whether this client is allowed to receive access tokens via the browser. 
     This is useful to harden flows that allow multiple response types 
@@ -40,8 +43,6 @@ Authentication/Logout
     Specifies logout URI at client for HTTP based logout
 ``LogoutSessionRequired``
     Specifies if the user's session id should be sent to the LogoutUri. Defaults to true.
-``RequireSignOutPrompt``
-    Specifies if the client will always show a confirmation page for sign-out. Defaults to false.
 ``EnableLocalLogin``
     Specifies if this client can use local accounts, or external IdPs only. Defaults to `true`.
 ``IdentityProviderRestrictions``

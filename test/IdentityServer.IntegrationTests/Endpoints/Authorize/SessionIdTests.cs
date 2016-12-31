@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using IdentityServer4.Models;
 using System.Security.Claims;
 using IdentityServer4.IntegrationTests.Common;
-using IdentityServer4.Services.InMemory;
+using IdentityServer4.Test;
 
 namespace IdentityServer4.IntegrationTests.Endpoints.Authorize
 {
@@ -42,9 +42,9 @@ namespace IdentityServer4.IntegrationTests.Endpoints.Authorize
                 }
             });
 
-            _mockPipeline.Users.Add(new InMemoryUser
+            _mockPipeline.Users.Add(new TestUser
             {
-                Subject = "bob",
+                SubjectId = "bob",
                 Username = "bob",
                 Claims = new Claim[]
                 {
@@ -54,38 +54,30 @@ namespace IdentityServer4.IntegrationTests.Endpoints.Authorize
                 }
             });
 
-            _mockPipeline.Scopes.AddRange(new Scope[] {
-                StandardScopes.OpenId,
-                StandardScopes.Profile,
-                StandardScopes.Email,
-                new Scope
+            _mockPipeline.IdentityScopes.AddRange(new IdentityResource[] {
+                new IdentityResources.OpenId(),
+                new IdentityResources.Profile(),
+                new IdentityResources.Email(),
+            });
+            _mockPipeline.ApiScopes.AddRange(new ApiResource[] {
+                new ApiResource
                 {
-                    Name = "api1",
-                    Type = ScopeType.Resource
-                },
-                new Scope
-                {
-                    Name = "api2",
-                    Type = ScopeType.Resource
+                    Name = "api",
+                    Scopes =
+                    {
+                        new Scope
+                        {
+                            Name = "api1",
+                        },
+                        new Scope
+                        {
+                            Name = "api2",
+                        }
+                    }
                 }
             });
 
             _mockPipeline.Initialize();
-        }
-
-        [Fact]
-        public async Task session_id_should_be_removed_if_user_is_not_longer_authenticated()
-        {
-            await _mockPipeline.LoginAsync("bob");
-            var sid = _mockPipeline.GetSessionCookie().Value;
-            sid.Should().NotBeNull();
-
-            _mockPipeline.RemoveLoginCookie();
-
-            await _mockPipeline.BrowserClient.GetAsync(MockIdSvrUiPipeline.DiscoveryEndpoint);
-
-            var sessionCookie = _mockPipeline.GetSessionCookie();
-            sessionCookie.Should().BeNull();
         }
 
         [Fact]

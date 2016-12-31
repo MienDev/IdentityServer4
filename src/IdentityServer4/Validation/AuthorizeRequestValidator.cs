@@ -159,6 +159,15 @@ namespace IdentityServer4.Validation
             request.Client = client;
 
             //////////////////////////////////////////////////////////
+            // check if client protocol type is oidc
+            //////////////////////////////////////////////////////////
+            if (request.Client.ProtocolType != IdentityServerConstants.ProtocolTypes.OpenIdConnect)
+            {
+                LogError($"Invalid protocol type for OIDC authorize endpoint: {request.Client.ProtocolType}", request);
+                return Invalid(request, OidcConstants.AuthorizeErrors.UnauthorizedClient);
+            }
+
+            //////////////////////////////////////////////////////////
             // check if redirect_uri is valid
             //////////////////////////////////////////////////////////
             if (await _uriValidator.IsRedirectUriValidAsync(request.RedirectUri, request.Client) == false)
@@ -338,6 +347,17 @@ namespace IdentityServer4.Validation
                 return fail;
             }
 
+            // check if plain method is allowed
+            if (codeChallengeMethod == OidcConstants.CodeChallengeMethods.Plain)
+            {
+                if (!request.Client.AllowPlainTextPkce)
+                {
+                    LogError("code_challenge_method of plain is not allowed", request);
+                    fail.ErrorDescription = "transform algorithm not supported";
+                    return fail;
+                }
+            }
+
             request.CodeChallengeMethod = codeChallengeMethod;
 
             return Valid(request);
@@ -363,7 +383,7 @@ namespace IdentityServer4.Validation
 
             request.RequestedScopes = scope.FromSpaceSeparatedString().Distinct().ToList();
 
-            if (request.RequestedScopes.Contains(Constants.StandardScopes.OpenId))
+            if (request.RequestedScopes.Contains(IdentityServerConstants.StandardScopes.OpenId))
             {
                 request.IsOpenIdRequest = true;
             }
@@ -396,15 +416,15 @@ namespace IdentityServer4.Validation
                 return Invalid(request, OidcConstants.AuthorizeErrors.InvalidScope);
             }
 
-            if (_scopeValidator.ContainsResourceScopes)
+            if (_scopeValidator.ContainsApiResourceScopes)
             {
-                request.IsResourceRequest = true;
+                request.IsApiResourceRequest = true;
             }
 
             //////////////////////////////////////////////////////////
             // check scopes and scope restrictions
             //////////////////////////////////////////////////////////
-            if (!_scopeValidator.AreScopesAllowed(request.Client, request.RequestedScopes))
+            if (await _scopeValidator.AreScopesAllowedAsync(request.Client, request.RequestedScopes) == false)
             {
                 return Invalid(request, OidcConstants.AuthorizeErrors.UnauthorizedClient);
             }
@@ -565,7 +585,7 @@ namespace IdentityServer4.Validation
                 {
                     if (!request.Client.IdentityProviderRestrictions.Contains(idp))
                     {
-                        _logger.LogWarning("idp requested: {0}, is not in client restriction list.", idp);
+                        _logger.LogWarning("idp requested ({idp}) is not in client restriction list.", idp);
                         request.RemoveIdP();
                     }
                 }
@@ -575,7 +595,7 @@ namespace IdentityServer4.Validation
             // check session cookie
             //////////////////////////////////////////////////////////
             if (_options.Endpoints.EnableCheckSessionEndpoint && 
-                request.Subject.Identity.IsAuthenticated)
+                request.Subject.IsAuthenticated())
             {
                 var sessionId = await _sessionId.GetCurrentSessionIdAsync();
                 if (sessionId.IsPresent())

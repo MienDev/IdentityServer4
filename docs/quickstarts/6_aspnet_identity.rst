@@ -1,3 +1,4 @@
+.. _refAspNetIdentityQuickstart:
 Using ASP.NET Core Identity
 ===========================
 
@@ -33,6 +34,8 @@ Finally, your new project dialog should look something like this. Once it does, 
 
 .. image:: images/6_web_app_template_with_aspnet_identity.png
 
+.. note:: Don't forget to update your project to ASP.NET Core 1.1. You can follow `this guide for updating to ASP.NET Core 1.1 <https://blogs.msdn.microsoft.com/webdev/2016/11/16/announcing-asp-net-core-1-1/>`_.
+
 Modify hosting
 ^^^^^^^^^^^^^^^
 
@@ -42,17 +45,16 @@ This is important so the existing clients and api projects will continue to work
 Add IdentityServer packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Add both the ``IdentityServer4`` and the ``IdentityServer4.AspNetIdentity`` packages to `project.json`::
+Add the ``IdentityServer4.AspNetIdentity`` package to `project.json`::
 
-    "IdentityServer4": "1.0.0-rc1-update2",
-    "IdentityServer4.AspNetIdentity": "1.0.0-rc1-update2"
+    "IdentityServer4.AspNetIdentity": "1.0.0"
 
 
 Scopes and Clients Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Despite this being a new project for IdentityServer, we still need the same scope and client configuration as the prior quickstarts.
-Copy the configuration class (in *Config.cs*) you used for the previous quickstarts into this new project.
+Copy the configuration class (in `Config.cs <https://github.com/IdentityServer/IdentityServer4.Samples/blob/dev/Quickstarts/1_ClientCredentials/src/QuickstartIdentityServer/Config.cs>`_) you used for the previous quickstarts into this new project.
 
 One change to the configuration that is necessary (for now) is to disable consent for the MVC client.
 We've not yet copied over the consent code from the prior IdentityServer project, so for now make this one modification to the MVC client and set ``RequireConsent=false``::
@@ -65,27 +67,21 @@ We've not yet copied over the consent code from the prior IdentityServer project
 
         RequireConsent = false,
 
-        ClientSecrets = new List<Secret>
+        ClientSecrets = 
         {
             new Secret("secret".Sha256())
         },
 
-        RedirectUris = new List<string>
-        {
-            "http://localhost:5002/signin-oidc"
-        },
-        PostLogoutRedirectUris = new List<string>
-        {
-            "http://localhost:5002"
-        },
+        RedirectUris           = { "http://localhost:5002/signin-oidc" },
+        PostLogoutRedirectUris = { "http://localhost:5002" },
 
-        AllowedScopes = new List<string>
+        AllowedScopes =
         {
-            StandardScopes.OpenId.Name,
-            StandardScopes.Profile.Name,
-            StandardScopes.OfflineAccess.Name,
+            IdentityServerConstants.StandardScopes.OpenId,
+            IdentityServerConstants.StandardScopes.Profile,
             "api1"
-        }
+        },
+        AllowOfflineAccess = true
     }
 
 Configure IdentityServer
@@ -116,8 +112,10 @@ The ``AddAspNetIdentity`` extension method requires a generic parameter which is
         services.AddTransient<ISmsSender, AuthMessageSender>();
 
         // Adds IdentityServer
-        services.AddDeveloperIdentityServer()
-            .AddInMemoryScopes(Config.GetScopes())
+        services.AddIdentityServer()
+            .AddTemporarySigningCredential()
+            .AddInMemoryIdentityResources(Config.GetIdentityResources())
+            .AddInMemoryApiResources(Config.GetApiResources())
             .AddInMemoryClients(Config.GetClients())
             .AddAspNetIdentity<ApplicationUser>();
     }

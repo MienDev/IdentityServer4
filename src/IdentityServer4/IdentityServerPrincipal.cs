@@ -18,7 +18,7 @@ namespace IdentityServer4
             string name,
             params Claim[] claims)
         {
-            return Create(subject, name, Constants.LocalIdentityProvider, new[] { OidcConstants.AuthenticationMethods.Password }, claims);
+            return Create(subject, name, IdentityServerConstants.LocalIdentityProvider, new[] { OidcConstants.AuthenticationMethods.Password }, claims);
         }
 
         public static ClaimsPrincipal Create(
@@ -36,7 +36,7 @@ namespace IdentityServer4
             IEnumerable<string> authenticationMethods,
             params Claim[] claims)
         {
-            return Create(subject, name, Constants.LocalIdentityProvider, authenticationMethods, claims);
+            return Create(subject, name, IdentityServerConstants.LocalIdentityProvider, authenticationMethods, claims);
         }
 
         public static ClaimsPrincipal Create(
@@ -56,7 +56,7 @@ namespace IdentityServer4
                 new Claim(JwtClaimTypes.Subject, subject),
                 new Claim(JwtClaimTypes.Name, name),
                 new Claim(JwtClaimTypes.IdentityProvider, identityProvider),
-                new Claim(JwtClaimTypes.AuthenticationTime, DateTimeHelper.UtcNow.ToEpochTime().ToString(), ClaimValueTypes.Integer)
+                new Claim(JwtClaimTypes.AuthenticationTime, IdentityServerDateTime.UtcNow.ToEpochTime().ToString(), ClaimValueTypes.Integer)
             };
 
             foreach (var amr in authenticationMethods)
@@ -64,7 +64,6 @@ namespace IdentityServer4
                 allClaims.Add(new Claim(JwtClaimTypes.AuthenticationMethod, amr));
             }
 
-            // todo: filtering?
             foreach (var claim in claims)
             {
                 allClaims.Add(claim);
@@ -76,7 +75,7 @@ namespace IdentityServer4
 
         internal static void AssertRequiredClaims(this ClaimsPrincipal principal)
         {
-            // todo: multi accounts?
+            // for now, we don't allow more than one identity in the principal/cookie
             if (principal.Identities.Count() != 1) throw new InvalidOperationException("only a single identity supported");
             if (principal.FindFirst(JwtClaimTypes.Subject) == null) throw new InvalidOperationException("sub claim is missing");
             if (principal.FindFirst(JwtClaimTypes.Name) == null) throw new InvalidOperationException("name claim is missing");
@@ -86,12 +85,15 @@ namespace IdentityServer4
         {
             var identity = principal.Identities.First();
 
+            // ASP.NET Identity issues this claim type and uses the authentication middleware name
+            // such as "Google" for the value. this code is trying to correct/convert that for
+            // our scenario. IOW, we take their old AuthenticationMethod value of "Google"
+            // and issue it as the idp claim. we then also issue a amr with "external"
             var amr = identity.FindFirst(ClaimTypes.AuthenticationMethod);
             if (amr != null &&
                 identity.FindFirst(JwtClaimTypes.IdentityProvider) == null && 
                 identity.FindFirst(JwtClaimTypes.AuthenticationMethod) == null)
             {
-                // this is correcting the use of AuthenticationMethod for use of external middleware like "Google", "Facebook", etc.
                 identity.RemoveClaim(amr);
                 identity.AddClaim(new Claim(JwtClaimTypes.IdentityProvider, amr.Value));
                 identity.AddClaim(new Claim(JwtClaimTypes.AuthenticationMethod, Constants.ExternalAuthenticationMethod));
@@ -99,7 +101,7 @@ namespace IdentityServer4
 
             if (identity.FindFirst(JwtClaimTypes.IdentityProvider) == null)
             {
-                identity.AddClaim(new Claim(JwtClaimTypes.IdentityProvider, Constants.LocalIdentityProvider));
+                identity.AddClaim(new Claim(JwtClaimTypes.IdentityProvider, IdentityServerConstants.LocalIdentityProvider));
             }
 
             if (identity.FindFirst(JwtClaimTypes.AuthenticationMethod) == null)
@@ -109,7 +111,7 @@ namespace IdentityServer4
 
             if (identity.FindFirst(JwtClaimTypes.AuthenticationTime) == null)
             {
-                identity.AddClaim(new Claim(JwtClaimTypes.AuthenticationTime, DateTimeHelper.UtcNow.ToEpochTime().ToString(), ClaimValueTypes.Integer));
+                identity.AddClaim(new Claim(JwtClaimTypes.AuthenticationTime, IdentityServerDateTime.UtcNow.ToEpochTime().ToString(), ClaimValueTypes.Integer));
             }
         }
 

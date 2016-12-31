@@ -32,8 +32,26 @@ namespace IdentityServer4.Endpoints.Results
         {
             Init(context);
 
+            AddCspHeaders(context);
+
             var html = GetHtml(_sessionId.GetCookieName());
             await context.Response.WriteHtmlAsync(html);
+        }
+
+        private void AddCspHeaders(HttpContext context)
+        {
+            // 'unsafe-inline' for edge
+            var value = "default-src 'none'; script-src 'unsafe-inline' 'sha256-VDXN0nOpFPQ102CIVz+eimHA5e+wTeoUUQj5ZYbtn8w='";
+
+            if (!context.Response.Headers.ContainsKey("Content-Security-Policy"))
+            {
+                context.Response.Headers.Add("Content-Security-Policy", value);
+            }
+
+            if (!context.Response.Headers.ContainsKey("X-Content-Security-Policy"))
+            {
+                context.Response.Headers.Add("X-Content-Security-Policy", value);
+            }
         }
 
         string GetHtml(string cookieName)
@@ -217,8 +235,11 @@ if (typeof String.prototype.utf8Decode == 'undefined') {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  */
 if (typeof module != 'undefined' && module.exports) module.exports = Sha256; // CommonJs export
 if (typeof define == 'function' && define.amd) define([], function() { return Sha256; }); // AMD
-    </script>
-    <script>
+
+////////////////////////////////////////////////////////////////////
+///////////// IdentityServer JS Code Starts here ///////////////////
+////////////////////////////////////////////////////////////////////
+
         function getCookies() {
             var allCookies = document.cookie;
             var cookies = allCookies.split(';');

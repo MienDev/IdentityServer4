@@ -4,6 +4,7 @@
 
 using IdentityServer4.Configuration;
 using IdentityServer4.Extensions;
+using IdentityServer4.Infrastructure;
 using IdentityServer4.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
@@ -18,11 +19,16 @@ namespace IdentityServer4
 {
     internal class MessageCookie<TModel>
     {
-        static readonly JsonSerializerSettings settings = new JsonSerializerSettings
+        static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
             DefaultValueHandling = DefaultValueHandling.Ignore,
         };
+
+        static MessageCookie()
+        {
+            Settings.Converters.Add(new NameValueCollectionConverter());
+        }
 
         private readonly ILogger<MessageCookie<TModel>> _logger;
         private readonly IdentityServerOptions _options;
@@ -41,14 +47,11 @@ namespace IdentityServer4
             _protector = provider.CreateProtector(MessageType);
         }
 
-        string MessageType
-        {
-            get { return typeof(TModel).Name; }
-        }
+        string MessageType => typeof(TModel).Name;
 
         string Protect(Message<TModel> message)
         {
-            var json = JsonConvert.SerializeObject(message, settings);
+            var json = JsonConvert.SerializeObject(message, Settings);
             _logger.LogTrace("Protecting message: {0}", json);
 
             return _protector.Protect(json);
@@ -57,30 +60,18 @@ namespace IdentityServer4
         Message<TModel> Unprotect(string data)
         {
             var json = _protector.Unprotect(data);
-            var message = JsonConvert.DeserializeObject<Message<TModel>>(json);
+            var message = JsonConvert.DeserializeObject<Message<TModel>>(json, Settings);
             return message;
         }
 
-        string CookiePrefix
-        {
-            get
-            {
-                return MessageType + ".";
-            }
-        }
+        string CookiePrefix => MessageType + ".";
 
         string GetCookieFullName(string id)
         {
             return CookiePrefix + id;
         }
 
-        string CookiePath
-        {
-            get
-            {
-                return _context.HttpContext.GetBasePath().CleanUrlPath();
-            }
-        }
+        string CookiePath => _context.HttpContext.GetIdentityServerBasePath().CleanUrlPath();
 
         private IEnumerable<string> GetCookieNames()
         {
@@ -94,19 +85,13 @@ namespace IdentityServer4
             }
         }
 
-        private bool Secure
-        {
-            get
-            {
-                return _context.HttpContext.Request.IsHttps;
-            }
-        }
+        private bool Secure => _context.HttpContext.Request.IsHttps;
 
         public void Write(string id, Message<TModel> message)
         {
             ClearOverflow();
 
-            if (message == null) throw new ArgumentNullException("message");
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
             var name = GetCookieFullName(id);
             var data = Protect(message);
@@ -161,7 +146,7 @@ namespace IdentityServer4
                 ".",
                 new CookieOptions
                 {
-                    Expires = DateTimeHelper.UtcNow.AddYears(-1),
+                    Expires = IdentityServerDateTime.UtcNow.AddYears(-1),
                     HttpOnly = true,
                     Secure = Secure,
                     Path = CookiePath
@@ -194,7 +179,7 @@ namespace IdentityServer4
         private void ClearOverflow()
         {
             var names = GetCookieNames();
-            var toKeep = _options.UserInteractionOptions.CookieMessageThreshold;
+            var toKeep = _options.UserInteraction.CookieMessageThreshold;
 
             if (names.Count() >= toKeep)
             {

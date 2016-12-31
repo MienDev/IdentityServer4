@@ -1,3 +1,4 @@
+.. _refJavaScriptQuickstart:
 Adding a JavaScript client
 ==========================
 
@@ -69,7 +70,7 @@ Add a new NPM package file to your project and name it `package.json`:
 In `package.json` add a ``devDependency`` to ``oidc-client``::
 
   "devDependencies": {
-    "oidc-client": "1.1.0"
+    "oidc-client": "1.2.2"
   }
 
 Once you have saved this file, Visual Studio should automatically restore these packages into a folder called `node_modules`:
@@ -236,23 +237,14 @@ It should have the configuration listed below::
         AllowedGrantTypes = GrantTypes.Implicit,
         AllowAccessTokensViaBrowser = true,
 
-        RedirectUris = new List<string>
-        {
-            "http://localhost:5003/callback.html"
-        },
-        PostLogoutRedirectUris = new List<string>
-        {
-            "http://localhost:5003/index.html"
-        },
-        AllowedCorsOrigins = new List<string>
-        {
-            "http://localhost:5003"
-        },
+        RedirectUris =           { "http://localhost:5003/callback.html" },
+        PostLogoutRedirectUris = { "http://localhost:5003/index.html" },
+        AllowedCorsOrigins =     { "http://localhost:5003" },
 
-        AllowedScopes = new List<string>
+        AllowedScopes = 
         {
-            StandardScopes.OpenId.Name,
-            StandardScopes.Profile.Name,
+            IdentityServerConstants.StandardScopes.OpenId,
+            IdentityServerConstants.StandardScopes.Profile,
             "api1"
         }
     }
@@ -271,7 +263,7 @@ Add the ``Microsoft.AspNetCore.Cors`` NuGet package to `project.json` in the web
 
 **Configure CORS**
 
-Next, add the CORS services to the dependnecy injection system in ``ConfigureServices`` in `Startup.cs`::
+Next, add the CORS services to the dependency injection system in ``ConfigureServices`` in `Startup.cs`::
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -304,7 +296,7 @@ Finally, add the CORS middleware to the pipeline in ``Configure``::
         app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
         {
             Authority = "http://localhost:5000",
-            ScopeName = "api1",
+            AllowedScopes = { "api1" },
 
             RequireHttpsMetadata = false
         });

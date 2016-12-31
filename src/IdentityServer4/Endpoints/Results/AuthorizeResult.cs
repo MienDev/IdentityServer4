@@ -18,7 +18,7 @@ namespace IdentityServer4.Endpoints.Results
 {
     class AuthorizeResult : IEndpointResult
     {
-        public AuthorizeResponse Response { get; private set; }
+        public AuthorizeResponse Response { get; }
 
         public AuthorizeResult(AuthorizeResponse response)
         {
@@ -110,12 +110,30 @@ namespace IdentityServer4.Endpoints.Results
             else if (Response.Request.ResponseMode == OidcConstants.ResponseModes.FormPost)
             {
                 context.Response.SetNoCache();
+                AddCspHeaders(context);
                 await context.Response.WriteHtmlAsync(GetFormPostHtml());
             }
             else
             {
                 //_logger.LogError("Unsupported response mode.");
                 throw new InvalidOperationException("Unsupported response mode");
+            }
+        }
+
+        private void AddCspHeaders(HttpContext context)
+        {
+            var formOrigin = Response.Request.RedirectUri.GetOrigin();
+            // 'unsafe-inline' for edge
+            var value = $"default-src 'none'; frame-ancestors {formOrigin}; form-action {formOrigin}; script-src 'unsafe-inline' 'sha256-VuNUSJ59bpCpw62HM2JG/hCyGiqoPN3NqGvNXQPU+rY=';";
+
+            if (!context.Response.Headers.ContainsKey("Content-Security-Policy"))
+            {
+                context.Response.Headers.Add("Content-Security-Policy", value);
+            }
+
+            if (!context.Response.Headers.ContainsKey("X-Content-Security-Policy"))
+            {
+                context.Response.Headers.Add("X-Content-Security-Policy", value);
             }
         }
 
@@ -165,9 +183,9 @@ namespace IdentityServer4.Endpoints.Results
             var message = new MessageWithId<ErrorMessage>(errorModel);
             await _errorMessageStore.WriteAsync(message.Id, message);
 
-            var errorUrl = _options.UserInteractionOptions.ErrorUrl;
+            var errorUrl = _options.UserInteraction.ErrorUrl;
 
-            var url = errorUrl.AddQueryString(_options.UserInteractionOptions.ErrorIdParameter, message.Id);
+            var url = errorUrl.AddQueryString(_options.UserInteraction.ErrorIdParameter, message.Id);
             context.Response.RedirectToAbsoluteUrl(url);
         }
     }
