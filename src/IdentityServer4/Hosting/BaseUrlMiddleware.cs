@@ -21,7 +21,15 @@ namespace IdentityServer4.Hosting
         {
             var request = context.Request;
 
-            var origin = request.Scheme + "://" + request.Host.Value;
+            // by Mien, for ali slb
+            var scheme = request.Scheme;
+            if (request.Headers.ContainsKey("X-Forwarded-proto")
+                && request.Headers["X-Forwarded-proto"] == "https")
+            {
+                scheme = "https";
+            }
+            var origin = scheme + "://" + request.Host.Value;
+            
             context.SetIdentityServerOrigin(origin);
             context.SetIdentityServerBasePath(request.PathBase.Value.RemoveTrailingSlash());
 
