@@ -56,19 +56,19 @@ namespace IdentityServer4.ResponseHandling
             //////////////////////////
             // access token
             /////////////////////////
-            var accessToken = await CreateAccessTokenAsync(request);
+            var tokens = await CreateAccessTokenAsync(request);
             var response = new TokenResponse
             {
-                AccessToken = accessToken.Item1,
-                AccessTokenLifetime = request.Client.AccessTokenLifetime
+                AccessToken = tokens.AccessTokens,
+                AccessTokenLifetime = request.AccessTokenLifetime
             };
 
             //////////////////////////
             // refresh token
             /////////////////////////
-            if (accessToken.Item2.IsPresent())
+            if (tokens.RefreshToken.IsPresent())
             {
-                response.RefreshToken = accessToken.Item2;
+                response.RefreshToken = tokens.RefreshToken;
             }
 
             //////////////////////////
@@ -92,7 +92,6 @@ namespace IdentityServer4.ResponseHandling
                 var tokenRequest = new TokenCreationRequest
                 {
                     Subject = request.AuthorizationCode.Subject,
-                    Client = client,
                     Resources = resources,
                     Nonce = request.AuthorizationCode.Nonce,
                     AccessTokenToHash = response.AccessToken,
@@ -111,17 +110,17 @@ namespace IdentityServer4.ResponseHandling
         {
             _logger.LogTrace("Processing token request");
 
-            var accessToken = await CreateAccessTokenAsync(validationResult.ValidatedRequest);
+            var tokens = await CreateAccessTokenAsync(validationResult.ValidatedRequest);
             var response = new TokenResponse
             {
-                AccessToken = accessToken.Item1,
-                AccessTokenLifetime = validationResult.ValidatedRequest.Client.AccessTokenLifetime,
+                AccessToken = tokens.AccessTokens,
+                AccessTokenLifetime = validationResult.ValidatedRequest.AccessTokenLifetime,
                 Custom = validationResult.CustomResponse
             };
 
-            if (accessToken.Item2.IsPresent())
+            if (tokens.RefreshToken.IsPresent())
             {
-                response.RefreshToken = accessToken.Item2;
+                response.RefreshToken = tokens.RefreshToken;
             }
 
             return response;
@@ -140,7 +139,6 @@ namespace IdentityServer4.ResponseHandling
 
                 var creationRequest = new TokenCreationRequest
                 {
-                    Client = request.Client,
                     Subject = subject,
                     ValidatedRequest = request,
                     Resources = await _resources.FindEnabledResourcesByScopeAsync(oldAccessToken.Scopes),
@@ -152,7 +150,7 @@ namespace IdentityServer4.ResponseHandling
             else
             {
                 oldAccessToken.CreationTime = IdentityServerDateTime.UtcNow;
-                oldAccessToken.Lifetime = request.Client.AccessTokenLifetime;
+                oldAccessToken.Lifetime = request.AccessTokenLifetime;
 
                 accessTokenString = await _tokenService.CreateSecurityTokenAsync(oldAccessToken);
             }
@@ -163,15 +161,16 @@ namespace IdentityServer4.ResponseHandling
             {
                 IdentityToken = await CreateIdTokenFromRefreshTokenRequestAsync(request, accessTokenString),
                 AccessToken = accessTokenString,
-                AccessTokenLifetime = request.Client.AccessTokenLifetime,
+                AccessTokenLifetime = request.AccessTokenLifetime,
                 RefreshToken = handle
             };
         }
 
-        private async Task<Tuple<string, string>> CreateAccessTokenAsync(ValidatedTokenRequest request)
+        private async Task<Tokens> CreateAccessTokenAsync(ValidatedTokenRequest request)
         {
             TokenCreationRequest tokenRequest;
             bool createRefreshToken;
+            var tokens = new Tokens();
 
             if (request.AuthorizationCode != null)
             {
@@ -193,7 +192,6 @@ namespace IdentityServer4.ResponseHandling
                 tokenRequest = new TokenCreationRequest
                 {
                     Subject = request.AuthorizationCode.Subject,
-                    Client = client,
                     Resources = resources,
                     ValidatedRequest = request
                 };
@@ -205,22 +203,21 @@ namespace IdentityServer4.ResponseHandling
                 tokenRequest = new TokenCreationRequest
                 {
                     Subject = request.Subject,
-                    Client = request.Client,
                     Resources = request.ValidatedScopes.GrantedResources,
                     ValidatedRequest = request
                 };
             }
 
             Token accessToken = await _tokenService.CreateAccessTokenAsync(tokenRequest);
+            tokens.AccessTokens = await _tokenService.CreateSecurityTokenAsync(accessToken);
 
-            string refreshToken = "";
             if (createRefreshToken)
             {
-                refreshToken = await _refreshTokenService.CreateRefreshTokenAsync(tokenRequest.Subject, accessToken, request.Client);
+                tokens.RefreshToken = await _refreshTokenService.CreateRefreshTokenAsync(tokenRequest.Subject, accessToken, request.Client);
             }
 
-            var securityToken = await _tokenService.CreateSecurityTokenAsync(accessToken);
-            return Tuple.Create(securityToken, refreshToken);
+
+            return tokens;
         }
 
         private async Task<string> CreateIdTokenFromRefreshTokenRequestAsync(ValidatedTokenRequest request, string newAccessToken)
@@ -232,7 +229,6 @@ namespace IdentityServer4.ResponseHandling
                 var tokenRequest = new TokenCreationRequest
                 {
                     Subject = request.RefreshToken.Subject,
-                    Client = request.Client,
                     Resources = await _resources.FindEnabledResourcesByScopeAsync(oldAccessToken.Scopes),
                     ValidatedRequest = request,
                     AccessTokenToHash = newAccessToken
@@ -243,6 +239,12 @@ namespace IdentityServer4.ResponseHandling
             }
 
             return null;
+        }
+
+        private class Tokens
+        {
+            public string AccessTokens { get; set; }
+            public string RefreshToken { get; set; }
         }
     }
 }
