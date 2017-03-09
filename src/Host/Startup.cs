@@ -42,12 +42,12 @@ namespace Host
             loggerFactory.AddSerilog(serilog);
         }
 
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddIdentityServer(options =>
                 {
                     options.Authentication.FederatedSignOutPaths.Add("/signout-callback-aad");
-                    options.Authentication.FederatedSignOutPaths.Add("/signout-callback-idsrv3");
+                    options.Authentication.FederatedSignOutPaths.Add("/signout-callback-idsrv");
                     options.Authentication.FederatedSignOutPaths.Add("/signout-callback-adfs");
                 })
             .AddInMemoryClients(Clients.Get())
@@ -61,9 +61,13 @@ namespace Host
             .AddTestUsers(TestUsers.Users);
 
             services.AddMvc();
+
+            // only use for development until this bug is fixed
+            // https://github.com/aspnet/DependencyInjection/pull/470
+            return services.BuildServiceProvider(validateScopes: true);
         }
 
-        public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app)
         {
             app.UseDeveloperExceptionPage();
 
@@ -79,18 +83,18 @@ namespace Host
 
             app.UseOpenIdConnectAuthentication(new OpenIdConnectOptions
             {
-                AuthenticationScheme = "idsrv3",
+                AuthenticationScheme = "demoidsrv",
                 SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme,
                 SignOutScheme = IdentityServerConstants.SignoutScheme,
-                DisplayName = "IdentityServer3",
+                DisplayName = "IdentityServer",
                 Authority = "https://demo.identityserver.io/",
                 ClientId = "implicit",
                 ResponseType = "id_token",
                 Scope = { "openid profile" },
                 SaveTokens = true,
-                CallbackPath = new PathString("/signin-idsrv3"),
-                SignedOutCallbackPath = new PathString("/signout-callback-idsrv3"),
-                RemoteSignOutPath = new PathString("/signout-idsrv3"),
+                CallbackPath = new PathString("/signin-idsrv"),
+                SignedOutCallbackPath = new PathString("/signout-callback-idsrv"),
+                RemoteSignOutPath = new PathString("/signout-idsrv"),
                 TokenValidationParameters = new TokenValidationParameters
                 {
                     NameClaimType = "name",
