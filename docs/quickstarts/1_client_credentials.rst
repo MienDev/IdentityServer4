@@ -14,7 +14,7 @@ Scopes define the resources in your system that you want to protect, e.g. APIs.
 Since we are using the in-memory configuration for this walkthrough - all you need to do 
 to add an API, is to create an object of type ``ApiResource`` and set the appropriate properties.
 
-Add a file (e.g. ``config.cs``) into your project and add the following code::
+Add a file (e.g. ``Config.cs``) into your project and add the following code::
 
     public static IEnumerable<ApiResource> GetApiResources()
     {
@@ -82,7 +82,7 @@ Adding an API
 ^^^^^^^^^^^^^
 Next, add an API to your solution. 
 
-You can use the ASP.NET Core Web API template for that.
+You can use the ASP.NET Core Web API template for that, or add the ``Microsoft.AspNetCore.Mvc`` package to your project.
 Again, we recommend you take control over the ports and use the same technique as you used
 to configure Kestrel and the launch profile as before.
 This walkthrough assumes you have configured your API to run on ``http://localhost:5001``.

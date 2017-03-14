@@ -37,6 +37,8 @@ namespace IdentityServer4.IntegrationTests.Clients
 
             builder.AddExtensionGrantValidator<ExtensionGrantValidator>();
             builder.AddExtensionGrantValidator<ExtensionGrantValidator2>();
+            builder.AddExtensionGrantValidator<NoSubjectExtensionGrantValidator>();
+            builder.AddExtensionGrantValidator<DynamicParameterExtensionGrantValidator>();
 
             builder.AddSecretParser<ClientAssertionSecretParser>();
             builder.AddSecretValidator<PrivateKeyJwtSecretValidator>();

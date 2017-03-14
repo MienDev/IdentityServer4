@@ -17,7 +17,12 @@ This is the main repo for IdentityServer4 - but there's more:
 
 ### Platform
 
-IdentityServer is built against ASP.NET Core 1.1.0 using the 1.0.0-preview2-003131 SDK. This is the only configuration we gonna support on the issue tracker.
+IdentityServer is built against ASP.NET Core 1.1 using the RTM tooling that ships with Visual Studio 2017. This is the only configuration we support on the issue tracker.
+
+### How to build
+
+* [Install](https://www.microsoft.com/net/download/core#/current) .NET Core 1.1 
+* Run build.ps1 from Powershell
 
 ### Acknowledgements
 

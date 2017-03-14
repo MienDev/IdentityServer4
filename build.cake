@@ -6,8 +6,6 @@ var configuration   = Argument<string>("configuration", "Release");
 ///////////////////////////////////////////////////////////////////////////////
 var isLocalBuild        = !AppVeyor.IsRunningOnAppVeyor;
 var packPath            = Directory("./src/IdentityServer4");
-var sourcePath          = Directory("./src");
-var testsPath           = Directory("test");
 var buildArtifacts      = Directory("./artifacts/packages");
 
 Task("Build")
@@ -15,17 +13,26 @@ Task("Build")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-	var projects = GetFiles("./**/project.json");
-
-	foreach(var project in projects)
-	{
-        var settings = new DotNetCoreBuildSettings 
+    var settings = new DotNetCoreBuildSettings 
         {
             Configuration = configuration
         };
 
-        DotNetCoreBuild(project.GetDirectory().FullPath, settings); 
-    }
+    if (!IsRunningOnWindows())
+        {
+            settings.Framework = "netstandard1.4";
+        }
+
+    DotNetCoreBuild(Directory("./src/IdentityServer4"), settings);
+    
+    if (!IsRunningOnWindows())
+        {
+            settings.Framework = "netcoreapp1.1";
+        }
+
+    DotNetCoreBuild(Directory("./src/Host"), settings);     
+    DotNetCoreBuild(Directory("./test/IdentityServer.IntegrationTests"), settings);
+    DotNetCoreBuild(Directory("./test/IdentityServer.UnitTests"), settings);
 });
 
 Task("RunTests")
@@ -33,10 +40,10 @@ Task("RunTests")
     .IsDependentOn("Clean")
     .Does(() =>
 {
-    var projects = GetFiles("./test/**/project.json");
+    var projects = GetFiles("./test/**/*.csproj");
 
     foreach(var project in projects)
-	{
+    {
         var settings = new DotNetCoreTestSettings
         {
             Configuration = configuration
@@ -48,7 +55,7 @@ Task("RunTests")
             settings.Framework = "netcoreapp1.1";
         }
 
-        DotNetCoreTest(project.GetDirectory().FullPath, settings);
+        DotNetCoreTest(project.FullPath, settings);
     }
 });
 
@@ -57,6 +64,12 @@ Task("Pack")
     .IsDependentOn("Clean")
     .Does(() =>
 {
+    if (!IsRunningOnWindows())
+        {
+            Information("Not running on Windows - skipping pack");
+            return;
+        }
+
     var settings = new DotNetCorePackSettings
     {
         Configuration = configuration,
@@ -86,8 +99,12 @@ Task("Restore")
         Sources = new [] { "https://api.nuget.org/v3/index.json" }
     };
 
-    DotNetCoreRestore(sourcePath, settings);
-    DotNetCoreRestore(testsPath, settings);
+	var projects = GetFiles("./**/*.csproj");
+
+	foreach(var project in projects)
+	{
+	    DotNetCoreRestore(project.GetDirectory().FullPath, settings);
+    }
 });
 
 Task("Default")

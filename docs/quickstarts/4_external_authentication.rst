@@ -27,18 +27,9 @@ Next we need to add the middleware to the pipeline.
 Order is important, the additional authentication middleware must run **after**
 IdentityServer and **before** MVC.
 
-The cookie middleware is used to temporarily store the outcome of the external authentication
-in a temporary cookie - register it like this::
-
-    app.UseCookieAuthentication(new CookieAuthenticationOptions
-    {
-        AuthenticationScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme,
-
-        AutomaticAuthenticate = false,
-        AutomaticChallenge = false
-    });
-
-After that add the Google middleware::
+By default, we wire up a cookie middleware behind the scenes, so that the external authentication can
+store its outcome. You simply need to add the external authentication middleware to the pipeline and make it use
+the ``IdentityServerConstants.ExternalCookieAuthenticationScheme`` sign-in scheme::
 
     app.UseGoogleAuthentication(new GoogleOptions
     {
@@ -61,7 +52,7 @@ After authentication, you can see that the claims are now being sourced from Goo
 Further experiments
 ^^^^^^^^^^^^^^^^^^^
 You can add an additional external provider.
-We have a cloud-hosted demo version of IdentityServer3 which you can integrate using OpenID Connect.
+We have a cloud-hosted demo version of IdentityServer4 which you can integrate using OpenID Connect.
 
 First add the OpenID Connect package to project.json::
 

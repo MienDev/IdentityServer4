@@ -50,15 +50,15 @@ namespace IdentityServer4.Endpoints
 
         public async Task<IEndpointResult> ProcessAsync(HttpContext context)
         {
+            if (context.Request.Path == Constants.ProtocolRoutePaths.Authorize.EnsureLeadingSlash())
+            {
+                return await ProcessAuthorizeAsync(context);
+            }
+
             if (context.Request.Method != "GET")
             {
                 _logger.LogWarning("Invalid HTTP method for authorize endpoint.");
                 return new StatusCodeResult(HttpStatusCode.MethodNotAllowed);
-            }
-
-            if (context.Request.Path == Constants.ProtocolRoutePaths.Authorize.EnsureLeadingSlash())
-            {
-                return await ProcessAuthorizeAsync(context);
             }
 
             if (context.Request.Path == Constants.ProtocolRoutePaths.AuthorizeAfterLogin.EnsureLeadingSlash())
@@ -78,9 +78,27 @@ namespace IdentityServer4.Endpoints
         {
             _logger.LogDebug("Start authorize request");
 
-            var values = context.Request.Query.AsNameValueCollection();
-            var user = await context.GetIdentityServerUserAsync();
+            NameValueCollection values;
 
+            if (context.Request.Method == "GET")
+            {
+                values = context.Request.Query.AsNameValueCollection();
+            }
+            else if (context.Request.Method == "POST")
+            {
+                if (!context.Request.HasFormContentType)
+                {
+                    return new StatusCodeResult(HttpStatusCode.UnsupportedMediaType);
+                }
+
+                values = context.Request.Form.AsNameValueCollection();
+            }
+            else
+            {
+                return new StatusCodeResult(HttpStatusCode.MethodNotAllowed);
+            }
+
+            var user = await context.GetIdentityServerUserAsync();
             var result = await ProcessAuthorizeRequestAsync(values, user, null);
 
             _logger.LogTrace("End authorize request. result type: {0}", result?.GetType().ToString() ?? "-none-");
@@ -173,7 +191,7 @@ namespace IdentityServer4.Endpoints
             var interactionResult = await _interactionGenerator.ProcessInteractionAsync(request, consent);
             if (interactionResult.IsError)
             {
-                return await CreateErrorResultAsync("Interaction generator error", request, interactionResult.Error);
+                return await CreateErrorResultAsync("Interaction generator error", request, interactionResult.Error, logError: false);
             }
             if (interactionResult.IsLogin)
             {
@@ -212,9 +230,14 @@ namespace IdentityServer4.Endpoints
             string logMessage,
             ValidatedAuthorizeRequest request = null, 
             string error = OidcConstants.AuthorizeErrors.ServerError, 
-            string errorDescription = null)
+            string errorDescription = null, 
+            bool logError = true)
         {
-            _logger.LogError(logMessage);
+            if (logError)
+            {
+                _logger.LogError(logMessage);
+            }
+
             if (request != null)
             {
                 var details = new AuthorizeRequestValidationLog(request);
