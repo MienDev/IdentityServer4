@@ -4,13 +4,20 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using IdentityServer4.Models;
-using System.Security.Claims;
+using IdentityServer4.Validation;
 
 namespace IdentityServer4.ResponseHandling
 {
+    /// <summary>
+    /// Interface for the userinfo response generator
+    /// </summary>
     public interface IUserInfoResponseGenerator
     {
-        Task<Dictionary<string, object>> ProcessAsync(ClaimsPrincipal subject, IEnumerable<string> scopes, Client client);
+        /// <summary>
+        /// Creates the response.
+        /// </summary>
+        /// <param name="validationResult">The userinfo request validation result.</param>
+        /// <returns></returns>
+        Task<Dictionary<string, object>> ProcessAsync(UserInfoRequestValidationResult validationResult);
     }
 }

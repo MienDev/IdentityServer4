@@ -10,21 +10,41 @@ using System;
 
 namespace IdentityServer4.Endpoints.Results
 {
+    /// <summary>
+    /// Result for introspection
+    /// </summary>
+    /// <seealso cref="IdentityServer4.Hosting.IEndpointResult" />
     public class IntrospectionResult : IEndpointResult
     {
-        public Dictionary<string, object> Result { get; }
+        /// <summary>
+        /// Gets the result.
+        /// </summary>
+        /// <value>
+        /// The result.
+        /// </value>
+        public Dictionary<string, object> Entries { get; }
 
-        public IntrospectionResult(Dictionary<string, object> result)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="IntrospectionResult"/> class.
+        /// </summary>
+        /// <param name="entries">The result.</param>
+        /// <exception cref="System.ArgumentNullException">result</exception>
+        public IntrospectionResult(Dictionary<string, object> entries)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-
-            Result = result;
+            Entries = entries ?? throw new ArgumentNullException(nameof(entries));
         }
-        
+
+        /// <summary>
+        /// Executes the result.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <returns></returns>
         public Task ExecuteAsync(HttpContext context)
         {
             context.Response.SetNoCache();
-            return context.Response.WriteJsonAsync(Result);
+
+            var jobject = ObjectSerializer.ToJObject(Entries);
+            return context.Response.WriteJsonAsync(jobject);
         }
     }
 }

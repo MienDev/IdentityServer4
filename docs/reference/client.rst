@@ -1,3 +1,4 @@
+.. _refClient:
 Client
 ======
 
@@ -28,7 +29,7 @@ Basics
     By default a client has no access to any resources - specify the allowed resources by adding the corresponding scopes names
 ``AllowOfflineAccess``
     Specifies whether this client can request refresh tokens (be requesting the ``offline_access`` scope)
-``AllowAccessTokenViaBrowser``
+``AllowAccessTokensViaBrowser``
     Specifies whether this client is allowed to receive access tokens via the browser. 
     This is useful to harden flows that allow multiple response types 
     (e.g. by disallowing a hybrid flow client that is supposed to use `code id_token` to add the `token` response type 
@@ -73,8 +74,6 @@ Token
     Gets or sets a value indicating whether the access token (and its claims) should be updated on a refresh token request.
 ``AccessTokenType``
     Specifies whether the access token is a reference token or a self contained JWT token (defaults to `Jwt`).
-
-    **note** production usage of reference tokens requires and implementation of ``ITokenHandleStore``.
 ``IncludeJwtId``
     Specifies whether JWT access tokens should have an embedded unique ID (via the `jti` claim).
 ``AllowedCorsOrigins``
@@ -93,8 +92,6 @@ Consent Screen
     Specifies whether a consent screen is required. Defaults to `true`.
 ``AllowRememberConsent``
     Specifies whether user can choose to store consent decisions. Defaults to `true`.
-    
-    **note** production usage of that features requires an implementation of ``IConsentStore``.
 ``ClientName``
     Client display name (used for logging and consent screen)
 ``ClientUri``

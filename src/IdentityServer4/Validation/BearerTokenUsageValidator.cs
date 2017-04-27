@@ -11,19 +11,29 @@ using System.Threading.Tasks;
 
 namespace IdentityServer4.Validation
 {
+    /// <summary>
+    /// Validates a request that uses a bearer token for authentication
+    /// </summary>
     public class BearerTokenUsageValidator
     {
-        private readonly ILogger<BearerTokenUsageValidator> _logger;
+        private readonly ILogger _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BearerTokenUsageValidator"/> class.
+        /// </summary>
+        /// <param name="logger">The logger.</param>
         public BearerTokenUsageValidator(ILogger<BearerTokenUsageValidator> logger)
         {
             _logger = logger;
         }
 
+        /// <summary>
+        /// Validates the request.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
         public async Task<BearerTokenUsageValidationResult> ValidateAsync(HttpContext context)
         {
-            _logger.LogInformation("ValidateAsync: Locating bearer token");
-
             var result = ValidateAuthorizationHeader(context);
             if (result.TokenFound)
             {
@@ -45,18 +55,19 @@ namespace IdentityServer4.Validation
             return new BearerTokenUsageValidationResult();
         }
 
+        /// <summary>
+        /// Validates the authorization header.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
         public BearerTokenUsageValidationResult ValidateAuthorizationHeader(HttpContext context)
         {
             var authorizationHeader = context.Request.Headers["Authorization"].FirstOrDefault();
             if (authorizationHeader.IsPresent())
             {
-                _logger.LogTrace("Authorization header value found");
-
                 var header = authorizationHeader.Trim();
                 if (header.StartsWith(OidcConstants.AuthenticationSchemes.AuthorizationHeaderBearer))
                 {
-                    _logger.LogTrace("Authorization scheme is bearer");
-
                     var value = header.Substring(OidcConstants.AuthenticationSchemes.AuthorizationHeaderBearer.Length).Trim();
                     if (value.IsPresent())
                     {
@@ -68,11 +79,20 @@ namespace IdentityServer4.Validation
                         };
                     }
                 }
+                else
+                {
+                    _logger.LogTrace("Unexpected header format: {header}", header);
+                }
             }
 
             return new BearerTokenUsageValidationResult();
         }
 
+        /// <summary>
+        /// Validates the post body.
+        /// </summary>
+        /// <param name="context">The context.</param>
+        /// <returns></returns>
         public async Task<BearerTokenUsageValidationResult> ValidatePostBodyAsync(HttpContext context)
         {
             var token = (await context.Request.ReadFormAsync())["access_token"].FirstOrDefault();

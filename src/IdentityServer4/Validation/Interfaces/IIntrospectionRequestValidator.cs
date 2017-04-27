@@ -2,14 +2,23 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using IdentityServer4.Models;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
-using IdentityServer4.Models;
 
 namespace IdentityServer4.Validation
 {
+    /// <summary>
+    /// Interface for the introspection request validator
+    /// </summary>
     public interface IIntrospectionRequestValidator
     {
-        Task<IntrospectionRequestValidationResult> ValidateAsync(NameValueCollection parameters, ApiResource apiResource);
+        /// <summary>
+        /// Validates the request.
+        /// </summary>
+        /// <param name="parameters">The parameters.</param>
+        /// <param name="api">The API.</param>
+        /// <returns></returns>
+        Task<IntrospectionRequestValidationResult> ValidateAsync(NameValueCollection parameters, ApiResource api);
     }
 }

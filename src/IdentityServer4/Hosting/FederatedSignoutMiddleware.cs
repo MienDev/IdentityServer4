@@ -12,6 +12,8 @@ using IdentityServer4.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http.Authentication;
 
+#pragma warning disable 1591
+
 namespace IdentityServer4.Hosting
 {
     public class FederatedSignOutMiddleware
@@ -21,7 +23,7 @@ namespace IdentityServer4.Hosting
 
         private readonly RequestDelegate _next;
         private readonly IdentityServerOptions _options;
-        private readonly ILogger<FederatedSignOutMiddleware> _logger;
+        private readonly ILogger _logger;
 
         public FederatedSignOutMiddleware(RequestDelegate next, IdentityServerOptions options, ILogger<FederatedSignOutMiddleware> logger)
         {

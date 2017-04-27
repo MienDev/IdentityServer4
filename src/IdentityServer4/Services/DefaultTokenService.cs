@@ -3,7 +3,6 @@
 
 
 using IdentityModel;
-using IdentityServer4.Events;
 using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Stores;
@@ -117,7 +116,6 @@ namespace IdentityServer4.Services
 
             claims.AddRange(await ClaimsProvider.GetIdentityTokenClaimsAsync(
                 request.Subject,
-                request.ValidatedRequest.Client,
                 request.Resources,
                 request.IncludeAllIdentityClaims,
                 request.ValidatedRequest));
@@ -152,7 +150,6 @@ namespace IdentityServer4.Services
             var claims = new List<Claim>();
             claims.AddRange(await ClaimsProvider.GetAccessTokenClaimsAsync(
                 request.Subject,
-                request.ValidatedRequest.Client,
                 request.Resources,
                 request.ValidatedRequest));
 
@@ -223,7 +220,6 @@ namespace IdentityServer4.Services
                 throw new InvalidOperationException("Invalid token type.");
             }
 
-            await Events.RaiseTokenIssuedEventAsync(token, tokenResult);
             return tokenResult;
         }
 

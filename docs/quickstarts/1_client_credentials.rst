@@ -59,7 +59,7 @@ Configure IdentityServer
 ^^^^^^^^^^^^^^^^^^^^^^^^
 To configure IdentityServer to use your scopes and client definition, you need to add code
 to the ``ConfigureServices`` method. 
-You can use convenient extensions methods for that - 
+You can use convenient extension methods for that - 
 under the covers these add the relevant stores and data into the DI system::
 
     public void ConfigureServices(IServiceCollection services)
@@ -71,7 +71,7 @@ under the covers these add the relevant stores and data into the DI system::
             .AddInMemoryClients(Config.GetClients());
     }
 
-That's it - if you run the server and navigate the browers to 
+That's it - if you run the server and navigate the browser to 
 ``http://localhost:5000/.well-known/openid-configuration``, you should see the so-called
 discovery document. 
 This will be used by your clients and APIs to download the necessary configuration data.
@@ -113,9 +113,9 @@ The job of that middleware is:
 * validate the incoming token to make sure it is coming from a trusted issuer
 * validate that the token is valid to be used with this api (aka scope)
 
-Add the following package to your project.json::
+Add the `IdentityServer4.AccessTokenValidation` NuGet package to your project.
 
-    "IdentityServer4.AccessTokenValidation": "1.0.1"
+.. image:: images/1_nuget_accesstokenvalidation.png
 
 You also need to add the middleware to your pipeline. 
 It must be added **before** MVC, e.g.::
@@ -150,9 +150,9 @@ The token endpoint at IdentityServer implements the OAuth 2.0 protocol, and you 
 raw HTTP to access it. However, we have a client library called IdentityModel, that
 encapsulates the protocol interaction in an easy to use API.
 
-Add IdentityModel to your project.json::
+Add the `IdentityModel` NuGet package to your application.
 
-    "IdentityModel": "2.0.0"
+.. image:: images/1_nuget_identitymodel.png
 
 IdentityModel includes a client library to use with the discovery endpoint.
 This way you only need to know the base-address of IdentityServer - the actual
@@ -217,7 +217,9 @@ This walkthrough focused on the success path so far
 
 You can now try to provoke errors to learn how the system behaves, e.g.
 
+* try to connect to IdentityServer when it is not running (unavailable)
 * try to use an invalid client id or secret to request the token
 * try to ask for an invalid scope during the token request
+* try to call the API when it is not running (unavailable)
 * don't send the token to the API
 * configure the API to require a different scope than the one in the token

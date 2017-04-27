@@ -15,22 +15,37 @@ using System.Threading.Tasks;
 
 namespace IdentityServer4.Endpoints
 {
+    /// <summary>
+    /// The discovery endpoint
+    /// </summary>
+    /// <seealso cref="IdentityServer4.Hosting.IEndpoint" />
     public class DiscoveryEndpoint : IEndpoint
     {
-        private readonly ILogger _logger;
         private readonly IdentityServerOptions _options;
         private readonly IDiscoveryResponseGenerator _responseGenerator;
+        private readonly ILogger _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DiscoveryEndpoint" /> class.
+        /// </summary>
+        /// <param name="options">The options.</param>
+        /// <param name="responseGenerator">The response generator.</param>
+        /// <param name="logger">The logger.</param>
         public DiscoveryEndpoint(
-            ILogger<DiscoveryEndpoint> logger, 
             IdentityServerOptions options,
-            IDiscoveryResponseGenerator responseGenerator)
+            IDiscoveryResponseGenerator responseGenerator,
+            ILogger<DiscoveryEndpoint> logger)
         {
             _logger = logger;
             _options = options;
             _responseGenerator = responseGenerator;
         }
 
+        /// <summary>
+        /// Processes the request.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <returns></returns>
         public Task<IEndpointResult> ProcessAsync(HttpContext context)
         {
             _logger.LogTrace("Processing discovery request.");
@@ -65,8 +80,11 @@ namespace IdentityServer4.Endpoints
             var baseUrl = context.GetIdentityServerBaseUrl().EnsureTrailingSlash();
             var issuerUri = context.GetIdentityServerIssuerUri();
 
+            // generate response
+            _logger.LogTrace("Calling into discovery response generator: {type}", _responseGenerator.GetType().FullName);
             var response = await _responseGenerator.CreateDiscoveryDocumentAsync(baseUrl, issuerUri);
-            return new DiscoveryDocumentResult(response);
+
+            return new DiscoveryDocumentResult(response, _options.Discovery.ResponseCacheInterval);
         }
 
         private async Task<IEndpointResult> ExecuteJwksAsync()
@@ -79,8 +97,11 @@ namespace IdentityServer4.Endpoints
                 return new StatusCodeResult(HttpStatusCode.NotFound);
             }
 
+            // generate response
+            _logger.LogTrace("Calling into discovery response generator: {type}", _responseGenerator.GetType().FullName);
             var response = await _responseGenerator.CreateJwkDocumentAsync();
-            return new JsonWebKeysResult(response);
+
+            return new JsonWebKeysResult(response, _options.Discovery.ResponseCacheInterval);
         }
     }
 }

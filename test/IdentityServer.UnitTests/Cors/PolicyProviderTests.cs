@@ -11,6 +11,8 @@ using Xunit;
 using IdentityServer4.Configuration;
 using IdentityServer4.Configuration.DependencyInjection;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using IdentityServer4.Services;
 
 namespace IdentityServer4.UnitTests.Hosting.Cors
 {
@@ -39,11 +41,18 @@ namespace IdentityServer4.UnitTests.Hosting.Cors
                 _options.Cors.CorsPaths.Add(new PathString(path));
             }
 
+            var ctx = new DefaultHttpContext();
+            var svcs = new ServiceCollection();
+            svcs.AddSingleton<ICorsPolicyService>(_mockPolicy);
+            ctx.RequestServices = svcs.BuildServiceProvider();
+            var ctxAccessor = new HttpContextAccessor();
+            ctxAccessor.HttpContext = ctx;
+
             _subject = new CorsPolicyProvider(
                 TestLogger.Create<CorsPolicyProvider>(),
                 new Decorator<ICorsPolicyProvider>(_mockInner),
                 _options,
-                _mockPolicy);
+                ctxAccessor);
         }
 
         [Theory]
@@ -58,7 +67,7 @@ namespace IdentityServer4.UnitTests.Hosting.Cors
                 "/foo",
                 "/bar/",
                 "/baz/quux",
-                "/baz/quux/",
+                "/baz/quux/"
             });
             Init();
 
@@ -130,7 +139,7 @@ namespace IdentityServer4.UnitTests.Hosting.Cors
         public async Task origin_same_as_server_should_not_call_policy()
         {
             _allowedPaths.AddRange(new string[] {
-                "/foo",
+                "/foo"
             });
             Init();
 
@@ -153,7 +162,7 @@ namespace IdentityServer4.UnitTests.Hosting.Cors
         public async Task origin_not_same_as_server_should_call_policy(string origin)
         {
             _allowedPaths.AddRange(new string[] {
-                "/foo",
+                "/foo"
             });
             Init();
 

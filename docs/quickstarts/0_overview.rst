@@ -13,7 +13,7 @@ If you start with ASP.NET Identity, we provide an easy way to integrate with tha
 
 The quickstarts provide step by step instructions for various common identityserver scenarios.
 They start with the absolute basics and become more complex - 
-it is recommended you do them in in order.
+it is recommended you do them in order.
 
 Every quickstart has a reference solution - you can find the code in the 
 `IdentityServer4.Samples <https://github.com/IdentityServer/IdentityServer4.Samples>`_
@@ -33,16 +33,15 @@ Then select the "Empty Web" option.
 
 .. image:: images/0_empty_web.png
 
-.. note:: IdentityServer currently only targets ASP.NET Core 1.1, so if you are starting with an ASP.NET Core 1.0 project then you can follow `this guide for updating to ASP.NET Core 1.1 <https://blogs.msdn.microsoft.com/webdev/2016/11/16/announcing-asp-net-core-1-1/>`_.
+.. note:: IdentityServer currently only targets ASP.NET Core 1.1.
 
-Next, add the IdentityServer4 nuget package by adding the following line to your project.json under the ´dependencies´ property::
+Next, add the `IdentityServer4` nuget package:
 
-    "IdentityServer4": "1.0.0"
+.. image:: images/0_nuget.png
     
 Alternatively you can use Package Manager Console to add the dependency by running the following command:
 
     "Install-Package IdentityServer4"
-
 
 IdentityServer uses the usual pattern to configure and add services to an ASP.NET Core host.
 In ``ConfigureServices`` the required services are configured and added to the DI system. 
@@ -81,7 +80,7 @@ Modify hosting
 ^^^^^^^^^^^^^^^
 
 By default Visual Studio uses IIS Express to host your web project. This is totally fine,
-besides that you won't be able to see the real time log output to the console.
+beside that you won't be able to see the real time log output to the console.
 
 IdentityServer makes extensive use of logging whereas the "visible" error message in the UI
 or returned to clients are deliberately vague.
@@ -93,7 +92,7 @@ You also don't need to launch a browser every time you start IdentityServer - yo
 .. image:: images/0_launch_profile.png
 
 When you switch to self-hosting, the web server port defaults to 5000. 
-You can configure this in ``Program.cs`` - 
+You can configure this either in the launch profile dialog above, or programmatically in ``Program.cs`` - 
 we use the following configuration for the IdentityServer host in the quickstarts::
 
     public class Program

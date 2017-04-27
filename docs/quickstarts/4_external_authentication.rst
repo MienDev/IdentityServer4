@@ -18,14 +18,11 @@ local IdentityServer by adding the */signin-google* path to your base-address (e
 If you are running on port 5000 - you can simply use the client id/secret from the code snippet
 below, since this is pre-registered by us.
 
-Add the Google and cookie authentication package to your project.json::
-
-    "Microsoft.AspNetCore.Authentication.Cookies": "1.0.0",
-    "Microsoft.AspNetCore.Authentication.Google": "1.0.0"
+Start by adding the Google authentication middleware nuget to your project (``Microsoft.AspNetCore.Authentication.Google``).
 
 Next we need to add the middleware to the pipeline.
 Order is important, the additional authentication middleware must run **after**
-IdentityServer and **before** MVC.
+IdentityServer but **before** MVC.
 
 By default, we wire up a cookie middleware behind the scenes, so that the external authentication can
 store its outcome. You simply need to add the external authentication middleware to the pipeline and make it use
@@ -41,6 +38,8 @@ the ``IdentityServerConstants.ExternalCookieAuthenticationScheme`` sign-in schem
         ClientSecret = "3gcoTrEDPPJ0ukn_aYYT6PWo"
     });
 
+.. note:: When using external authentication with ASP.NET Core Identity, the ``SignInScheme`` must be set to ``"Identity.External"`` instead of ``IdentityServerConstants.ExternalCookieAuthenticationScheme``.
+
 Now run the MVC client and try to authenticate - you will see a Google button on the login page:
 
 .. image:: images/4_login_page.png
@@ -54,9 +53,9 @@ Further experiments
 You can add an additional external provider.
 We have a cloud-hosted demo version of IdentityServer4 which you can integrate using OpenID Connect.
 
-First add the OpenID Connect package to project.json::
+First add the `Microsoft.AspNetCore.Authentication.OpenIdConnect` NuGet package to your project.
 
-    "Microsoft.AspNetCore.Authentication.OpenIdConnect": "1.0.0"
+.. image:: images/4_nuget_oidc.png
 
 Next add the middleware::
 

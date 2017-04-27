@@ -2,46 +2,55 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using System.Linq;
 using System.Threading.Tasks;
-using IdentityServer4.Configuration;
 using IdentityServer4.Validation;
-using IdentityServer4.Services;
 using IdentityServer4.ResponseHandling;
 using Microsoft.Extensions.Logging;
-using IdentityServer4.Events;
 using IdentityServer4.Hosting;
 using IdentityServer4.Endpoints.Results;
 using IdentityModel;
 using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace IdentityServer4.Endpoints
 {
+    /// <summary>
+    /// The userinfo endpoint
+    /// </summary>
+    /// <seealso cref="IdentityServer4.Hosting.IEndpoint" />
     public class UserInfoEndpoint : IEndpoint
     {
-        private readonly ILogger _logger;
-        private readonly IEventService _events;
-        private readonly IUserInfoResponseGenerator _generator;
-        private readonly IdentityServerOptions _options;
         private readonly BearerTokenUsageValidator _tokenUsageValidator;
-        private readonly ITokenValidator _tokenValidator;
+        private readonly IUserInfoRequestValidator _requestValidator;
+        private readonly IUserInfoResponseGenerator _responseGenerator;
+        private readonly ILogger _logger;
 
-        public UserInfoEndpoint(IdentityServerOptions options, ITokenValidator tokenValidator, IUserInfoResponseGenerator generator, BearerTokenUsageValidator tokenUsageValidator, IEventService events, ILogger<UserInfoEndpoint> logger)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserInfoEndpoint" /> class.
+        /// </summary>
+        /// <param name="tokenUsageValidator">The token usage validator.</param>
+        /// <param name="requestValidator">The request validator.</param>
+        /// <param name="responseGenerator">The response generator.</param>
+        /// <param name="logger">The logger.</param>
+        public UserInfoEndpoint(BearerTokenUsageValidator tokenUsageValidator, IUserInfoRequestValidator requestValidator, IUserInfoResponseGenerator responseGenerator, ILogger<UserInfoEndpoint> logger)
         {
-            _options = options;
-            _tokenValidator = tokenValidator;
             _tokenUsageValidator = tokenUsageValidator;
-            _generator = generator;
-            _events = events;
+            _requestValidator = requestValidator;
+            _responseGenerator = responseGenerator;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Processes the request.
+        /// </summary>
+        /// <param name="context">The HTTP context.</param>
+        /// <returns></returns>
         public async Task<IEndpointResult> ProcessAsync(HttpContext context)
         {
             if (context.Request.Method != "GET" && context.Request.Method != "POST")
             {
                 _logger.LogWarning("Invalid HTTP method for userinfo endpoint.");
-                return new StatusCodeResult(405);
+                return new StatusCodeResult(HttpStatusCode.MethodNotAllowed);
             }
 
             return await ProcessUserInfoRequestAsync(context);
@@ -51,67 +60,37 @@ namespace IdentityServer4.Endpoints
         {
             _logger.LogDebug("Start userinfo request");
 
+            // userinfo requires an access token on the request
             var tokenUsageResult = await _tokenUsageValidator.ValidateAsync(context);
             if (tokenUsageResult.TokenFound == false)
             {
                 var error = "No access token found.";
 
                 _logger.LogError(error);
-                await RaiseFailureEventAsync(error);
                 return Error(OidcConstants.ProtectedResourceErrors.InvalidToken);
             }
 
-            _logger.LogDebug("Token found: {bearerTokenUsageType}", tokenUsageResult.UsageType.ToString());
+            // validate the request
+            _logger.LogTrace("Calling into userinfo request validator: {type}", _requestValidator.GetType().FullName);
+            var validationResult = await _requestValidator.ValidateRequestAsync(tokenUsageResult.Token);
 
-            var tokenResult = await _tokenValidator.ValidateAccessTokenAsync(
-                tokenUsageResult.Token,
-                IdentityServerConstants.StandardScopes.OpenId);
-
-            if (tokenResult.IsError)
+            if (validationResult.IsError)
             {
-                _logger.LogError(tokenResult.Error);
-                await RaiseFailureEventAsync(tokenResult.Error);
-                return Error(tokenResult.Error);
+                //_logger.LogError("Error validating  validationResult.Error);
+                return Error(validationResult.Error);
             }
 
-            // pass scopes/claims to profile service
-            var claims = tokenResult.Claims.Where(x => !Constants.Filters.ProtocolClaimsFilter.Contains(x.Type));
-            var subject = Principal.Create("UserInfo", claims.ToArray());
-
-            if (subject.FindFirst(JwtClaimTypes.Subject) == null)
-            {
-                var error = "Token contains no sub claim";
-                _logger.LogError(error);
-                await RaiseFailureEventAsync(error);
-                return Error(OidcConstants.ProtectedResourceErrors.InvalidToken);
-            }
-
-            var scopes = tokenResult.Claims.Where(c => c.Type == JwtClaimTypes.Scope).Select(c => c.Value);
-
-            var payload = await _generator.ProcessAsync(subject, scopes, tokenResult.Client);
+            // generate response
+            _logger.LogTrace("Calling into userinfo response generator: {type}", _responseGenerator.GetType().FullName);
+            var response = await _responseGenerator.ProcessAsync(validationResult);
 
             _logger.LogDebug("End userinfo request");
-            await RaiseSuccessEventAsync();
-
-            return new UserInfoResult(payload);
+            return new UserInfoResult(response);
         }
 
         private IEndpointResult Error(string error, string description = null)
         {
             return new ProtectedResourceErrorResult(error, description);
-        }
-
-        private async Task RaiseSuccessEventAsync()
-        {
-            await _events.RaiseSuccessfulEndpointEventAsync(EventConstants.EndpointNames.UserInfo);
-        }
-
-        private async Task RaiseFailureEventAsync(string error)
-        {
-            if (_options.Events.RaiseFailureEvents)
-            {
-                await _events.RaiseFailureEndpointEventAsync(EventConstants.EndpointNames.UserInfo, error);
-            }
         }
     }
 }
