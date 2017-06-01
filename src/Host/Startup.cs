@@ -61,15 +61,11 @@ namespace Host
                 .AddExtensionGrantValidator<Extensions.NoSubjectExtensionGrantValidator>()
                 .AddSecretParser<ClientAssertionSecretParser>()
                 .AddSecretValidator<PrivateKeyJwtSecretValidator>()
+                .AddRedirectUriValidator<StrictRedirectUriValidatorAppAuth>()
                 .AddTestUsers(TestUsers.Users);
-
-            // AppAuth enabled redirect URI validator
-            services.AddTransient<IRedirectUriValidator, StrictRedirectUriValidatorAppAuth>();
 
             services.AddMvc();
 
-            // only use for development until this bug is fixed
-            // https://github.com/aspnet/DependencyInjection/pull/470
             return services.BuildServiceProvider(validateScopes: true);
         }
 

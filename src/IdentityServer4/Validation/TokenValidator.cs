@@ -25,7 +25,7 @@ namespace IdentityServer4.Validation
     /// The token validator
     /// </summary>
     /// <seealso cref="IdentityServer4.Validation.ITokenValidator" />
-    public class TokenValidator : ITokenValidator
+    internal class TokenValidator : ITokenValidator
     {
         private readonly ILogger _logger;
         private readonly IdentityServerOptions _options;
@@ -277,7 +277,7 @@ namespace IdentityServer4.Validation
                 return Invalid(OidcConstants.ProtectedResourceErrors.InvalidToken);
             }
 
-            if (IdentityServerDateTime.UtcNow >= token.CreationTime.AddSeconds(token.Lifetime))
+            if (token.CreationTime.HasExceeded(token.Lifetime))
             {
                 LogError("Token expired.");
 
