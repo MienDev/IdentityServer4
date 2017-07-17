@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using IdentityServer4.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using IdentityServer4.Services;
+using IdentityServer4.Configuration;
 
 namespace IdentityServer4.Endpoints.Results
 {
@@ -16,16 +16,16 @@ namespace IdentityServer4.Endpoints.Results
         {
         }
 
-        internal CheckSessionResult(ISessionIdService sessionId)
+        internal CheckSessionResult(IdentityServerOptions options)
         {
-            _sessionId = sessionId;
+            _options = options;
         }
 
-        private ISessionIdService _sessionId;
+        private IdentityServerOptions _options;
 
         void Init(HttpContext context)
         {
-            _sessionId = _sessionId ?? context.RequestServices.GetRequiredService<ISessionIdService>();
+            _options = _options ?? context.RequestServices.GetRequiredService<IdentityServerOptions>();
         }
 
         public async Task ExecuteAsync(HttpContext context)
@@ -34,7 +34,7 @@ namespace IdentityServer4.Endpoints.Results
 
             AddCspHeaders(context);
 
-            var html = GetHtml(_sessionId.GetCookieName());
+            var html = GetHtml(_options.Authentication.CheckSessionCookieName);
             await context.Response.WriteHtmlAsync(html);
         }
 
@@ -61,6 +61,8 @@ namespace IdentityServer4.Endpoints.Results
 
         const string _html = @"
 <!DOCTYPE html>
+<!--Copyright (c) Brock Allen & Dominick Baier. All rights reserved.-->
+<!--Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.-->
 <html>
 <head>
     <meta http-equiv='X-UA-Compatible' content='IE=edge' />

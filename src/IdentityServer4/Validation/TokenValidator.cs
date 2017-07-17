@@ -94,7 +94,7 @@ namespace IdentityServer4.Validation
             var client = await _clients.FindEnabledClientByIdAsync(clientId);
             if (client == null)
             {
-                _logger.LogError("Unknown or diabled client: {clientId}.", clientId);
+                _logger.LogError("Unknown or disabled client: {clientId}.", clientId);
                 return Invalid(OidcConstants.ProtectedResourceErrors.InvalidToken);
             }
 
@@ -277,7 +277,7 @@ namespace IdentityServer4.Validation
                 return Invalid(OidcConstants.ProtectedResourceErrors.InvalidToken);
             }
 
-            if (token.CreationTime.HasExceeded(token.Lifetime))
+            if (token.CreationTime.HasExceeded(token.Lifetime, _options.UtcNow))
             {
                 LogError("Token expired.");
 

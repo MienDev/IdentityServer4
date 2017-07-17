@@ -13,6 +13,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Xunit;
+using IdentityServer4.Configuration;
 
 namespace IdentityServer4.UnitTests.Services.Default
 {
@@ -24,9 +25,14 @@ namespace IdentityServer4.UnitTests.Services.Default
         ClaimsPrincipal _user;
         Client _client;
         TestUserConsentStore _userConsentStore = new TestUserConsentStore();
+        IdentityServerOptions _options = new IdentityServerOptions();
+
+        DateTime now;
 
         public DefaultConsentServiceTests()
         {
+            _options.UtcNowFunc = () => UtcNow;
+
             _client = new Client
             {
                 ClientId = "client"
@@ -40,7 +46,16 @@ namespace IdentityServer4.UnitTests.Services.Default
                 new Claim(JwtClaimTypes.AuthenticationContextClassReference, "acr1")
             });
 
-            _subject = new DefaultConsentService(_userConsentStore);
+            _subject = new DefaultConsentService(_options, _userConsentStore);
+        }
+
+        public DateTime UtcNow
+        {
+            get
+            {
+                if (now > DateTime.MinValue) return now;
+                return DateTime.UtcNow;
+            }
         }
 
         [Fact]
@@ -153,19 +168,37 @@ namespace IdentityServer4.UnitTests.Services.Default
         [Fact]
         public async Task RequiresConsentAsync_expired_consent_should_require_consent()
         {
+            now = DateTime.UtcNow;
+
             var scopes = new string[] { "foo", "bar" };
-            await _userConsentStore.StoreUserConsentAsync(new Consent()
-            {
-                ClientId = _client.ClientId,
-                SubjectId = _user.GetSubjectId(),
-                Scopes = scopes,
-                CreationTime = DateTime.UtcNow.AddHours(-1),
-                Expiration = DateTime.UtcNow.AddSeconds(-1)
-            });
+            _client.ConsentLifetime = 2;
+
+            await _subject.UpdateConsentAsync(_user, _client, scopes);
+
+            now = now.AddSeconds(3);
 
             var result = await _subject.RequiresConsentAsync(_user, _client, scopes);
 
             result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task RequiresConsentAsync_expired_consent_should_remove_consent()
+        {
+            now = DateTime.UtcNow;
+
+            var scopes = new string[] { "foo", "bar" };
+            _client.ConsentLifetime = 2;
+
+            await _subject.UpdateConsentAsync(_user, _client, scopes);
+
+            now = now.AddSeconds(3);
+
+            await _subject.RequiresConsentAsync(_user, _client, scopes);
+
+            var result = await _userConsentStore.GetUserConsentAsync(_user.GetSubjectId(), _client.ClientId);
+
+            result.Should().BeNull();
         }
     }
 }

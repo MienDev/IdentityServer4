@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using IdentityServer4.Configuration;
 
 namespace IdentityServer4.Services
 {
@@ -24,12 +25,19 @@ namespace IdentityServer4.Services
         protected readonly IUserConsentStore _userConsentStore;
 
         /// <summary>
+        ///  The IdentityServerOptions
+        /// </summary>
+        protected readonly IdentityServerOptions _options;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DefaultConsentService" /> class.
         /// </summary>
+        /// <param name="options">The options.</param>
         /// <param name="userConsentStore">The user consent store.</param>
         /// <exception cref="System.ArgumentNullException">store</exception>
-        public DefaultConsentService(IUserConsentStore userConsentStore)
+        public DefaultConsentService(IdentityServerOptions options, IUserConsentStore userConsentStore)
         {
+            _options = options;
             _userConsentStore = userConsentStore;
         }
 
@@ -81,7 +89,7 @@ namespace IdentityServer4.Services
                 return true;
             }
 
-            if (consent.Expiration.HasExpired())
+            if (consent.Expiration.HasExpired(_options.UtcNow))
             {
                 await _userConsentStore.RemoveUserConsentAsync(consent.SubjectId, consent.ClientId);
                 return true;
@@ -122,10 +130,17 @@ namespace IdentityServer4.Services
                 {
                     var consent = new Consent
                     {
+                        CreationTime = _options.UtcNow,
                         SubjectId = subjectId,
                         ClientId = clientId,
                         Scopes = scopes
                     };
+
+                    if (client.ConsentLifetime.HasValue)
+                    {
+                        consent.Expiration = consent.CreationTime.AddSeconds(client.ConsentLifetime.Value);
+                    }
+
                     await _userConsentStore.StoreUserConsentAsync(consent);
                 }
                 else
