@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 using System;
 using IdentityServer4.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http.Authentication;
 using IdentityServer4.Services;
+using Microsoft.AspNetCore.Authentication;
 
 #pragma warning disable 1591
 
@@ -65,7 +65,8 @@ namespace IdentityServer4.Hosting
                     {
                         _logger.LogDebug("sid parameter matches external idp sid claim for current user");
 
-                        await context.Authentication.SignOutAsync();
+                        // todo - default method does not pick up our auhtN scheme
+                        await context.SignOutAsync();
 
                         var iframeUrl = await context.GetIdentityServerSignoutFrameCallbackUrlAsync();
                         if (iframeUrl != null)

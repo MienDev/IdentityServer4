@@ -23,6 +23,10 @@ using System.Linq;
 using IdentityServer4.Models;
 using IdentityServer4.Infrastructure;
 using System.Net.Http;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
+using static IdentityServer4.Constants;
+using IdentityServer4.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -38,13 +42,35 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IIdentityServerBuilder AddRequiredPlatformServices(this IIdentityServerBuilder builder)
         {
-            builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            builder.Services.AddAuthentication();
+            builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();            
             builder.Services.AddOptions();
-
             builder.Services.AddSingleton(
                 resolver => resolver.GetRequiredService<IOptions<IdentityServerOptions>>().Value);
 
+            return builder;
+        }
+
+        public static IIdentityServerBuilder AddCookieAuthentication(this IIdentityServerBuilder builder)
+        {
+            // todo: is not really needed for IS...?!
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = IdentityServerConstants.DefaultCookieAuthenticationScheme;
+                options.DefaultChallengeScheme = IdentityServerConstants.DefaultCookieAuthenticationScheme;
+                options.DefaultSignInScheme = IdentityServerConstants.DefaultCookieAuthenticationScheme;
+                options.DefaultSignOutScheme = IdentityServerConstants.DefaultCookieAuthenticationScheme;
+            })
+            .AddCookie(IdentityServerConstants.DefaultCookieAuthenticationScheme, options =>
+            {
+                options.Cookie.Name = IdentityServerConstants.DefaultCookieAuthenticationScheme;
+            })
+            .AddCookie(IdentityServerConstants.ExternalCookieAuthenticationScheme, options =>
+            {
+                options.Cookie.Name = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+            });
+
+            builder.Services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, ConfigureInternalCookieOptions>();
+            
             return builder;
         }
 
@@ -55,22 +81,16 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static IIdentityServerBuilder AddDefaultEndpoints(this IIdentityServerBuilder builder)
         {
-            builder.Services.AddSingleton<IEndpointRouter>(resolver =>
-            {
-                return new EndpointRouter(Constants.EndpointPathToNameMap,
-                    resolver.GetRequiredService<IdentityServerOptions>(),
-                    resolver.GetServices<EndpointMapping>(),
-                    resolver.GetRequiredService<ILogger<EndpointRouter>>());
-            });
+            builder.Services.AddTransient<IEndpointRouter, EndpointRouter>();
 
-            builder.AddEndpoint<AuthorizeEndpoint>(EndpointName.Authorize);
-            builder.AddEndpoint<CheckSessionEndpoint>(EndpointName.CheckSession);
-            builder.AddEndpoint<DiscoveryEndpoint>(EndpointName.Discovery);
-            builder.AddEndpoint<EndSessionEndpoint>(EndpointName.EndSession);
-            builder.AddEndpoint<IntrospectionEndpoint>(EndpointName.Introspection);
-            builder.AddEndpoint<TokenRevocationEndpoint>(EndpointName.Revocation);
-            builder.AddEndpoint<TokenEndpoint>(EndpointName.Token);
-            builder.AddEndpoint<UserInfoEndpoint>(EndpointName.UserInfo);
+            builder.AddEndpoint<AuthorizeEndpoint>(EndpointNames.Authorize, ProtocolRoutePaths.Authorize.EnsureLeadingSlash());
+            builder.AddEndpoint<CheckSessionEndpoint>(EndpointNames.CheckSession, ProtocolRoutePaths.CheckSession.EnsureLeadingSlash());
+            builder.AddEndpoint<DiscoveryEndpoint>(EndpointNames.Discovery, ProtocolRoutePaths.DiscoveryConfiguration.EnsureLeadingSlash());
+            builder.AddEndpoint<EndSessionEndpoint>(EndpointNames.EndSession, ProtocolRoutePaths.EndSession.EnsureLeadingSlash());
+            builder.AddEndpoint<IntrospectionEndpoint>(EndpointNames.Introspection, ProtocolRoutePaths.Introspection.EnsureLeadingSlash());
+            builder.AddEndpoint<TokenRevocationEndpoint>(EndpointNames.Revocation, ProtocolRoutePaths.Revocation.EnsureLeadingSlash());
+            builder.AddEndpoint<TokenEndpoint>(EndpointNames.Token, ProtocolRoutePaths.Token.EnsureLeadingSlash());
+            builder.AddEndpoint<UserInfoEndpoint>(EndpointNames.UserInfo, ProtocolRoutePaths.UserInfo.EnsureLeadingSlash());
 
             return builder;
         }
@@ -80,13 +100,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="builder">The builder.</param>
-        /// <param name="endpoint">The endpoint.</param>
+        /// <param name="name">The name.</param>
+        /// <param name="path">The path.</param>
         /// <returns></returns>
-        public static IIdentityServerBuilder AddEndpoint<T>(this IIdentityServerBuilder builder, EndpointName endpoint)
-            where T : class, IEndpoint
+        public static IIdentityServerBuilder AddEndpoint<T>(this IIdentityServerBuilder builder, string name, PathString path)
+            where T : class, IEndpointHandler
         {
             builder.Services.AddTransient<T>();
-            builder.Services.AddSingleton(new EndpointMapping { Endpoint = endpoint, Handler = typeof(T) });
+            builder.Services.AddSingleton(new Endpoint(name, path, typeof(T)));
 
             return builder;
         }
@@ -114,7 +135,10 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.AddTransient<IReturnUrlParser, OidcReturnUrlParser>();
             builder.Services.AddTransient<IUserSession, DefaultUserSession>();
             builder.Services.AddTransient(typeof(MessageCookie<>));
-            builder.Services.AddScoped<AuthenticationHandler>();
+
+            // todo
+            //builder.Services.AddScoped<AuthenticationHandler>();
+            builder.Services.AddTransient<IAuthenticationService, IdentityServerAuthenticationService>();
 
             builder.Services.AddCors();
             builder.Services.AddTransientDecorator<ICorsPolicyProvider, CorsPolicyProvider>();
@@ -170,7 +194,7 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAddTransient<IRedirectUriValidator, StrictRedirectUriValidator>();
             builder.Services.TryAddTransient<ITokenValidator, TokenValidator>();
             builder.Services.TryAddTransient<IIntrospectionRequestValidator, IntrospectionRequestValidator>();
-            builder.Services.TryAddTransient<IResourceOwnerPasswordValidator, NotSupportedResouceOwnerPasswordValidator>();
+            builder.Services.TryAddTransient<IResourceOwnerPasswordValidator, NotSupportedResourceOwnerPasswordValidator>();
             builder.Services.TryAddTransient<ICustomTokenRequestValidator, DefaultCustomTokenRequestValidator>();
             builder.Services.TryAddTransient<IUserInfoRequestValidator, UserInfoRequestValidator>();
 
