@@ -228,11 +228,11 @@ namespace IdentityServer4.IntegrationTests.Common
         }
         public void RemoveSessionCookie()
         {
-            BrowserClient.RemoveCookie("https://server/", $"{Options.Authentication.EffectiveAuthenticationScheme}.session");
+            BrowserClient.RemoveCookie("https://server/", IdentityServerConstants.DefaultCheckSessionCookieName);
         }
         public Cookie GetSessionCookie()
         {
-            return BrowserClient.GetCookie("https://server/", $"{Options.Authentication.EffectiveAuthenticationScheme}.session");
+            return BrowserClient.GetCookie("https://server/", IdentityServerConstants.DefaultCheckSessionCookieName);
         }
 
         public string CreateAuthorizeUrl(
