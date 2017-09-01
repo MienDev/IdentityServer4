@@ -3,8 +3,6 @@
 
 
 using System;
-using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
 
 namespace IdentityServer4.Configuration
 {
@@ -30,14 +28,6 @@ namespace IdentityServer4.Configuration
         /// <c>true</c> if required; otherwise, <c>false</c>.
         /// </value>
         public bool RequireAuthenticatedUserForSignOutMessage { get; set; } = false;
-
-        /// <summary>
-        /// Gets or sets the federated sign out paths.
-        /// </summary>
-        /// <value>
-        /// The federated sign out paths.
-        /// </value>
-        public ICollection<PathString> FederatedSignOutPaths { get; set; } = new List<PathString>();
 
         /// <summary>
         /// Gets or sets the name of the cookie used for the check session endpoint.

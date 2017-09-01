@@ -21,7 +21,6 @@ using System;
 using System.Linq;
 using IdentityServer4.Models;
 using IdentityServer4.Infrastructure;
-using System.Net.Http;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using static IdentityServer4.Constants;
@@ -51,20 +50,14 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static IIdentityServerBuilder AddCookieAuthentication(this IIdentityServerBuilder builder)
         {
-            // todo: review
-            // by default we use our internal cookie handlers - this can be overridden by calling AddAuthentication after this code and set a different default scheme
             builder.Services.AddAuthentication(IdentityServerConstants.DefaultCookieAuthenticationScheme)
-                .AddCookie(IdentityServerConstants.DefaultCookieAuthenticationScheme, options =>
-                {
-                    options.Cookie.Name = IdentityServerConstants.DefaultCookieAuthenticationScheme;
-                })
-                .AddCookie(IdentityServerConstants.ExternalCookieAuthenticationScheme, options =>
-                {
-                    options.Cookie.Name = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-                });
+                .AddCookie(IdentityServerConstants.DefaultCookieAuthenticationScheme)
+                .AddCookie(IdentityServerConstants.ExternalCookieAuthenticationScheme);
 
             builder.Services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, ConfigureInternalCookieOptions>();
-            
+            builder.Services.AddTransientDecorator<IAuthenticationService, IdentityServerAuthenticationService>();
+            builder.Services.AddTransientDecorator<IAuthenticationHandlerProvider, FederatedSignoutAuthenticationHandlerProvider>();
+
             return builder;
         }
 
@@ -121,18 +114,14 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.AddTransient<ExtensionGrantValidator>();
             builder.Services.AddTransient<BearerTokenUsageValidator>();
             builder.Services.AddTransient<BackChannelLogoutClient>();
-            builder.Services.AddTransient<HttpClient>();
+            builder.Services.AddTransient<BackChannelHttpClient>();
             
             builder.Services.AddTransient<ReturnUrlParser>();
             builder.Services.AddTransient<IdentityServerTools>();
 
             builder.Services.AddTransient<IReturnUrlParser, OidcReturnUrlParser>();
-            builder.Services.AddTransient<IUserSession, DefaultUserSession>();
+            builder.Services.AddScoped<IUserSession, DefaultUserSession>();
             builder.Services.AddTransient(typeof(MessageCookie<>));
-
-            // todo
-            //builder.Services.AddScoped<AuthenticationHandler>();
-            builder.Services.AddTransient<IAuthenticationService, IdentityServerAuthenticationService>();
 
             builder.Services.AddCors();
             builder.Services.AddTransientDecorator<ICorsPolicyProvider, CorsPolicyProvider>();

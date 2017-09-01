@@ -11,33 +11,45 @@ using IdentityServer4;
 using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Http;
 using IdentityServer4.Quickstart.UI;
+using Microsoft.Extensions.Configuration;
 
 namespace Host
 {
     public class Startup
     {
+        private readonly IConfiguration _config;
+
+        public Startup(IConfiguration config)
+        {
+            _config = config;
+        }
+
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
 
+            services.Configure<IISOptions>(iis => {
+                iis.AuthenticationDisplayName = "Windows";
+                iis.AutomaticAuthentication = false;
+            });
+
             services.AddIdentityServer(options =>
                 {
-                    options.Authentication.FederatedSignOutPaths.Add("/signout-callback-aad");
-                    options.Authentication.FederatedSignOutPaths.Add("/signout-callback-idsrv");
-                    options.Authentication.FederatedSignOutPaths.Add("/signout-callback-adfs");
-
                     options.Events.RaiseSuccessEvents = true;
                     options.Events.RaiseFailureEvents = true;
                     options.Events.RaiseErrorEvents = true;
                 })
                 .AddInMemoryClients(Clients.Get())
+                //.AddInMemoryClients(_config.GetSection("Clients"))
                 .AddInMemoryIdentityResources(Resources.GetIdentityResources())
                 .AddInMemoryApiResources(Resources.GetApiResources())
                 .AddDeveloperSigningCredential()
                 .AddExtensionGrantValidator<Extensions.ExtensionGrantValidator>()
                 .AddExtensionGrantValidator<Extensions.NoSubjectExtensionGrantValidator>()
+                // todo: consider a helper extension method for these two?
                 .AddSecretParser<ClientAssertionSecretParser>()
                 .AddSecretValidator<PrivateKeyJwtSecretValidator>()
+                // todo: consider a helper extension method for this?
                 .AddRedirectUriValidator<StrictRedirectUriValidatorAppAuth>()
                 .AddTestUsers(TestUsers.Users);
 
@@ -61,6 +73,11 @@ namespace Host
     {
         public static IServiceCollection AddExternalIdentityProviders(this IServiceCollection services)
         {
+            //var aadFormatter = services.CreateDistributedCacheStateDataFormatter<OpenIdConnectOptions>("aad");
+            //var demoidsrvFormatter = services.CreateDistributedCacheStateDataFormatter<OpenIdConnectOptions>("demoidsrv");
+
+            services.AddDistributedCacheStateDataFormatterForOidc();
+
             services.AddAuthentication()
                 .AddGoogle("Google", options =>
                 {
@@ -71,6 +88,8 @@ namespace Host
                 })
                 .AddOpenIdConnect("demoidsrv", "IdentityServer", options =>
                 {
+                    //options.StateDataFormat = demoidsrvFormatter;
+
                     options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
                     options.SignOutScheme = IdentityServerConstants.SignoutScheme;
 
@@ -90,6 +109,8 @@ namespace Host
                 })
                 .AddOpenIdConnect("aad", "Azure AD", options =>
                 {
+                    //options.StateDataFormat = aadFormatter;
+
                     options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
                     options.SignOutScheme = IdentityServerConstants.SignoutScheme;
                 
