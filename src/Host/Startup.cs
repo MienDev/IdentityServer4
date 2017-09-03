@@ -28,7 +28,8 @@ namespace Host
         {
             services.AddMvc();
 
-            services.Configure<IISOptions>(iis => {
+            services.Configure<IISOptions>(iis => 
+            {
                 iis.AuthenticationDisplayName = "Windows";
                 iis.AutomaticAuthentication = false;
             });
@@ -49,8 +50,7 @@ namespace Host
                 // todo: consider a helper extension method for these two?
                 .AddSecretParser<ClientAssertionSecretParser>()
                 .AddSecretValidator<PrivateKeyJwtSecretValidator>()
-                // todo: consider a helper extension method for this?
-                .AddRedirectUriValidator<StrictRedirectUriValidatorAppAuth>()
+                .AddAppAuthRedirectUriValidator()
                 .AddTestUsers(TestUsers.Users);
 
             services.AddExternalIdentityProviders();
