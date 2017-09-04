@@ -262,6 +262,14 @@ namespace IdentityServer4.Models
         public ICollection<string> AllowedCorsOrigins { get; set; } = new HashSet<string>();
 
         /// <summary>
+        /// Gets or sets the custom properties for the client.
+        /// </summary>
+        /// <value>
+        /// The properties.
+        /// </value>
+        public IDictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
         /// Validates the grant types.
         /// </summary>
         /// <param name="grantTypes">The grant types.</param>
@@ -274,10 +282,9 @@ namespace IdentityServer4.Models
         /// </exception>
         public static void ValidateGrantTypes(IEnumerable<string> grantTypes)
         {
-            // must set at least one grant type
-            if (grantTypes.IsNullOrEmpty())
+            if (grantTypes == null)
             {
-                throw new InvalidOperationException("Grant types list is empty");
+                throw new ArgumentNullException(nameof(grantTypes));
             }
 
             // spaces are not allowed in grant types
