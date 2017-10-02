@@ -19,9 +19,10 @@ namespace IdentityServer4.Services
         internal const string ClientListKey = "client_list";
 
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private IAuthenticationSchemeProvider _schemes;
-        private IAuthenticationHandlerProvider _handlers;
+        private readonly IAuthenticationSchemeProvider _schemes;
+        private readonly IAuthenticationHandlerProvider _handlers;
         private readonly IdentityServerOptions _options;
+        private readonly ISystemClock _clock;
         private readonly ILogger _logger;
 
         private HttpContext HttpContext => _httpContextAccessor.HttpContext;
@@ -35,18 +36,20 @@ namespace IdentityServer4.Services
             IAuthenticationSchemeProvider schemes,
             IAuthenticationHandlerProvider handlers,
             IdentityServerOptions options,
+            ISystemClock clock,
             ILogger<IUserSession> logger)
         {
             _httpContextAccessor = httpContextAccessor;
             _schemes = schemes;
             _handlers = handlers;
             _options = options;
+            _clock = clock;
             _logger = logger;
         }
 
-        async Task<string> GetCookieSchemeAsync()
+        private async Task<string> GetCookieSchemeAsync()
         {
-            var defaultScheme = (await _schemes.GetDefaultAuthenticateSchemeAsync());
+            var defaultScheme = await _schemes.GetDefaultAuthenticateSchemeAsync();
             if (defaultScheme == null)
             {
                 throw new InvalidOperationException("No DefaultAuthenticateScheme found.");
@@ -64,7 +67,7 @@ namespace IdentityServer4.Services
         // just reading the incoming cookie
         // 
         // this design requires this to be in DI as scoped
-        async Task AuthenticateAsync()
+        private async Task AuthenticateAsync()
         {
             if (_principal == null || _properties == null)
             {
@@ -93,8 +96,7 @@ namespace IdentityServer4.Services
             var currentSubjectId = (await GetUserAsync())?.GetSubjectId();
             var newSubjectId = principal.GetSubjectId();
 
-            // todo: add some tests here
-            if (!properties.Items.ContainsKey(SessionIdKey) || currentSubjectId == null || currentSubjectId != newSubjectId)
+            if (!properties.Items.ContainsKey(SessionIdKey) || currentSubjectId != newSubjectId)
             {
                 properties.Items[SessionIdKey] = CryptoRandom.CreateUniqueId(16);
             }
@@ -133,7 +135,7 @@ namespace IdentityServer4.Services
             }
             else
             {
-                // todo: validate if this is still true since we now pass a 
+                // todo brock: validate if this is still true since we now pass a 
                 // seralized message as param to end sesison callback
                 //
                 // we don't want to delete the session id cookie if the user is
@@ -150,7 +152,7 @@ namespace IdentityServer4.Services
             {
                 // only remove it if we have it in the request
                 var options = CreateSessionIdCookieOptions();
-                options.Expires = _options.UtcNow.AddYears(-1);
+                options.Expires = _clock.UtcNow.UtcDateTime.AddYears(-1);
 
                 HttpContext.Response.Cookies.Append(CheckSessionCookieName, ".", options);
             }
@@ -190,7 +192,7 @@ namespace IdentityServer4.Services
         }
 
         // client list helpers
-        async Task<string> GetClientListPropertyValueAsync()
+        private async Task<string> GetClientListPropertyValueAsync()
         {
             await AuthenticateAsync();
 
@@ -202,13 +204,13 @@ namespace IdentityServer4.Services
             return null;
         }
 
-        async Task SetClientsAsync(IEnumerable<string> clients)
+        private async Task SetClientsAsync(IEnumerable<string> clients)
         {
             var value = EncodeList(clients);
             await SetClientListPropertyValueAsync(value);
         }
 
-        async Task SetClientListPropertyValueAsync(string value)
+        private async Task SetClientListPropertyValueAsync(string value)
         {
             await AuthenticateAsync();
 
@@ -227,7 +229,7 @@ namespace IdentityServer4.Services
             await HttpContext.SignInAsync(scheme, _principal, _properties);
         }
 
-        IEnumerable<string> DecodeList(string value)
+        private IEnumerable<string> DecodeList(string value)
         {
             if (value.IsPresent())
             {
@@ -239,7 +241,7 @@ namespace IdentityServer4.Services
             return Enumerable.Empty<string>();
         }
 
-        string EncodeList(IEnumerable<string> list)
+        private string EncodeList(IEnumerable<string> list)
         {
             if (list != null && list.Any())
             {
@@ -253,12 +255,12 @@ namespace IdentityServer4.Services
         }
 
         // session id cookie helpers
-        string GetSessionIdCookieValue()
+        private string GetSessionIdCookieValue()
         {
             return HttpContext.Request.Cookies[CheckSessionCookieName];
         }
 
-        void IssueSessionIdCookie(string sid)
+        private void IssueSessionIdCookie(string sid)
         {
             if (GetSessionIdCookieValue() != sid)
             {
@@ -269,7 +271,7 @@ namespace IdentityServer4.Services
             }
         }
 
-        CookieOptions CreateSessionIdCookieOptions()
+        private CookieOptions CreateSessionIdCookieOptions()
         {
             var secure = HttpContext.Request.IsHttps;
             var path = HttpContext.GetIdentityServerBasePath().CleanUrlPath();

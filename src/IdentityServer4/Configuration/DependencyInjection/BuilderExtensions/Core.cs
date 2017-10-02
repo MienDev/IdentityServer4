@@ -48,6 +48,11 @@ namespace Microsoft.Extensions.DependencyInjection
             return builder;
         }
 
+        /// <summary>
+        /// Adds the default cookie handlers and corresponding configuration
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <returns></returns>
         public static IIdentityServerBuilder AddCookieAuthentication(this IIdentityServerBuilder builder)
         {
             builder.Services.AddAuthentication(IdentityServerConstants.DefaultCookieAuthenticationScheme)
@@ -55,6 +60,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 .AddCookie(IdentityServerConstants.ExternalCookieAuthenticationScheme);
 
             builder.Services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, ConfigureInternalCookieOptions>();
+            builder.Services.AddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureInternalCookieOptions>();
             builder.Services.AddTransientDecorator<IAuthenticationService, IdentityServerAuthenticationService>();
             builder.Services.AddTransientDecorator<IAuthenticationHandlerProvider, FederatedSignoutAuthenticationHandlerProvider>();
 
@@ -241,7 +247,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         internal static void AddDecorator<TService>(this IServiceCollection services)
         {
-            var registration = services.FirstOrDefault(x => x.ServiceType == typeof(TService));
+            var registration = services.LastOrDefault(x => x.ServiceType == typeof(TService));
             if (registration == null)
             {
                 throw new InvalidOperationException("Service type: " + typeof(TService).Name + " not registered.");

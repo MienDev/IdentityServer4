@@ -12,7 +12,7 @@ using IdentityServer4.Services;
 using IdentityModel;
 using System;
 using Microsoft.Extensions.DependencyInjection;
-using IdentityServer4.Configuration;
+using Microsoft.AspNetCore.Authentication;
 
 namespace IdentityServer4
 {
@@ -21,7 +21,7 @@ namespace IdentityServer4
     /// </summary>
     public class IdentityServerTools
     {
-        internal readonly IHttpContextAccessor _contextAccessor;
+        internal readonly IHttpContextAccessor ContextAccessor;
         private readonly ITokenCreationService _tokenCreation;
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace IdentityServer4
         public IdentityServerTools(IHttpContextAccessor contextAccessor, ITokenCreationService tokenCreation)
         {
             _tokenCreation = tokenCreation;
-            _contextAccessor = contextAccessor;
+            ContextAccessor = contextAccessor;
         }
 
         /// <summary>
@@ -46,12 +46,12 @@ namespace IdentityServer4
         {
             if (claims == null) throw new ArgumentNullException(nameof(claims));
 
-            var issuer = _contextAccessor.HttpContext.GetIdentityServerIssuerUri();
-            var options = _contextAccessor.HttpContext.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var issuer = ContextAccessor.HttpContext.GetIdentityServerIssuerUri();
+            var clock = ContextAccessor.HttpContext.RequestServices.GetRequiredService<ISystemClock>();
 
             var token = new Token
             {
-                CreationTime = options.UtcNow,
+                CreationTime = clock.UtcNow.UtcDateTime,
                 Issuer = issuer,
                 Lifetime = lifetime,
 

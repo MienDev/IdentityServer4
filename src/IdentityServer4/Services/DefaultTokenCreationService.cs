@@ -7,6 +7,7 @@ using IdentityServer4.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Linq;
 using IdentityModel;
@@ -14,7 +15,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
-using IdentityServer4.Configuration;
+using Microsoft.AspNetCore.Authentication;
 
 namespace IdentityServer4.Services
 {
@@ -34,19 +35,19 @@ namespace IdentityServer4.Services
         protected readonly ILogger Logger;
 
         /// <summary>
-        ///  The IdentityServerOptions;
+        ///  The clock
         /// </summary>
-        protected readonly IdentityServerOptions Options;
+        protected readonly ISystemClock Clock;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultTokenCreationService"/> class.
         /// </summary>
-        /// <param name="options">The options.</param>
+        /// <param name="clock">The options.</param>
         /// <param name="keys">The keys.</param>
         /// <param name="logger">The logger.</param>
-        public DefaultTokenCreationService(IdentityServerOptions options, IKeyMaterialService keys, ILogger<DefaultTokenCreationService> logger)
+        public DefaultTokenCreationService(ISystemClock clock, IKeyMaterialService keys, ILogger<DefaultTokenCreationService> logger)
         {
-            Options = options;
+            Clock = clock;
             Keys = keys;
             Logger = logger;
         }
@@ -86,9 +87,9 @@ namespace IdentityServer4.Services
             if (credential.Key is X509SecurityKey x509key)
             {
                 var cert = x509key.Certificate;
-                if (Options.UtcNow > cert.NotAfter)
+                if (Clock.UtcNow.UtcDateTime > cert.NotAfter)
                 {
-                    Logger.LogWarning("Certificate {subjectName} has expired on {expiration}", cert.Subject, cert.NotAfter.ToString());
+                    Logger.LogWarning("Certificate {subjectName} has expired on {expiration}", cert.Subject, cert.NotAfter.ToString(CultureInfo.InvariantCulture));
                 }
 
                 header.Add("x5t", Base64Url.Encode(cert.GetCertHash()));
@@ -108,8 +109,8 @@ namespace IdentityServer4.Services
                 token.Issuer,
                 null,
                 null,
-                Options.UtcNow,
-                Options.UtcNow.AddSeconds(token.Lifetime));
+                Clock.UtcNow.UtcDateTime,
+                Clock.UtcNow.UtcDateTime.AddSeconds(token.Lifetime));
 
             foreach (var aud in token.Audiences)
             {
@@ -176,7 +177,7 @@ namespace IdentityServer4.Services
                     throw new Exception(String.Format("Can't add two claims where one is a JSON array and the other is not a JSON array ({0})", group.Key));
                 }
 
-                List<JToken> newArr = new List<JToken>();
+                var newArr = new List<JToken>();
                 foreach (var arrays in group)
                 {
                     var arr = (JArray)arrays.JsonValue;

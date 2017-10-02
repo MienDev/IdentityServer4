@@ -5,7 +5,6 @@
 using System.Threading.Tasks;
 using IdentityServer4.Validation;
 using IdentityServer4.ResponseHandling;
-using IdentityServer4.Services;
 using Microsoft.Extensions.Logging;
 using IdentityServer4.Hosting;
 using IdentityServer4.Endpoints.Results;
@@ -18,9 +17,8 @@ namespace IdentityServer4.Endpoints
     /// Introspection endpoint
     /// </summary>
     /// <seealso cref="IdentityServer4.Hosting.IEndpointHandler" />
-    class IntrospectionEndpoint : IEndpointHandler
+    internal class IntrospectionEndpoint : IEndpointHandler
     {
-        private readonly IEventService _events;
         private readonly IIntrospectionResponseGenerator _responseGenerator;
         private readonly ILogger _logger;
         private readonly IIntrospectionRequestValidator _requestValidator;
@@ -32,14 +30,16 @@ namespace IdentityServer4.Endpoints
         /// <param name="apiSecretValidator">The API secret validator.</param>
         /// <param name="requestValidator">The request validator.</param>
         /// <param name="responseGenerator">The generator.</param>
-        /// <param name="events">The events.</param>
         /// <param name="logger">The logger.</param>
-        public IntrospectionEndpoint(ApiSecretValidator apiSecretValidator, IIntrospectionRequestValidator requestValidator, IIntrospectionResponseGenerator responseGenerator, IEventService events, ILogger<IntrospectionEndpoint> logger)
+        public IntrospectionEndpoint(
+            ApiSecretValidator apiSecretValidator, 
+            IIntrospectionRequestValidator requestValidator, 
+            IIntrospectionResponseGenerator responseGenerator,  
+            ILogger<IntrospectionEndpoint> logger)
         {
             _apiSecretValidator = apiSecretValidator;
             _requestValidator = requestValidator;
             _responseGenerator = responseGenerator;
-            _events = events;
             _logger = logger;
         }
 
@@ -104,6 +104,7 @@ namespace IdentityServer4.Endpoints
             return new IntrospectionResult(response);
         }
 
+        // todo: cleanup logging and log levels
         private void LogSuccess(string tokenStatus, string apiName)
         {
             _logger.LogInformation("Success token introspection. Token status: {tokenStatus}, for API name: {apiName}", tokenStatus, apiName);

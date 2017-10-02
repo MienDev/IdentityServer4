@@ -32,7 +32,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             // todo
             if (!(credential.Key is AsymmetricSecurityKey
-                || (credential.Key is JsonWebKey && ((JsonWebKey)credential.Key).HasPrivateKey)))
+                || credential.Key is JsonWebKey && ((JsonWebKey)credential.Key).HasPrivateKey))
             //&& !credential.Key.IsSupportedAlgorithm(SecurityAlgorithms.RsaSha256Signature))
             {
                 throw new InvalidOperationException("Signing key is not asymmetric");
@@ -115,7 +115,7 @@ namespace Microsoft.Extensions.DependencyInjection
             if (File.Exists(filename))
             {
                 var keyFile = File.ReadAllText(filename);
-                var tempKey = JsonConvert.DeserializeObject<TemporaryRsaKey>(keyFile, new JsonSerializerSettings() { ContractResolver = new RsaKeyContractResolver() });
+                var tempKey = JsonConvert.DeserializeObject<TemporaryRsaKey>(keyFile, new JsonSerializerSettings { ContractResolver = new RsaKeyContractResolver() });
 
                 return builder.AddSigningCredential(CreateRsaSecurityKey(tempKey.Parameters, tempKey.KeyId));
             }
@@ -138,7 +138,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
                 if (persistKey)
                 {
-                    File.WriteAllText(filename, JsonConvert.SerializeObject(tempKey, new JsonSerializerSettings() { ContractResolver = new RsaKeyContractResolver() }));
+                    File.WriteAllText(filename, JsonConvert.SerializeObject(tempKey, new JsonSerializerSettings { ContractResolver = new RsaKeyContractResolver() }));
                 }
                 
                 return builder.AddSigningCredential(key);
@@ -167,7 +167,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns></returns>
         public static RsaSecurityKey CreateRsaSecurityKey()
         {
-            RSA rsa = RSA.Create();
+            var rsa = RSA.Create();
             RsaSecurityKey key;
 
             if (rsa is RSACryptoServiceProvider)

@@ -3,7 +3,6 @@
 
 
 using IdentityServer4;
-using IdentityServer4.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
@@ -39,9 +38,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string subject, string name, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(subject, name, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(subject, name, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal);
         }
 
@@ -56,9 +55,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string subject, string name, AuthenticationProperties properties, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(subject, name, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(subject, name, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal, properties);
         }
 
@@ -73,9 +72,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string subject, string name, string identityProvider, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(subject, name, identityProvider, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(subject, name, identityProvider, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal);
         }
 
@@ -91,9 +90,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string subject, string name, string identityProvider, AuthenticationProperties properties, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(subject, name, identityProvider, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(subject, name, identityProvider, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal, properties);
         }
 
@@ -108,9 +107,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string subject, string name, IEnumerable<string> authenticationMethods, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(subject, name, authenticationMethods, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(subject, name, authenticationMethods, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal);
         }
 
@@ -126,9 +125,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string subject, string name, IEnumerable<string> authenticationMethods, AuthenticationProperties properties, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(subject, name, authenticationMethods, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(subject, name, authenticationMethods, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal, properties);
         }
 
@@ -144,9 +143,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string sub, string name, string identityProvider, IEnumerable<string> authenticationMethods, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(sub, name, identityProvider, authenticationMethods, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(sub, name, identityProvider, authenticationMethods, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal);
         }
 
@@ -163,9 +162,9 @@ namespace Microsoft.AspNetCore.Http
         /// <returns></returns>
         public static async Task SignInAsync(this HttpContext context, string sub, string name, string identityProvider, IEnumerable<string> authenticationMethods, AuthenticationProperties properties, params Claim[] claims)
         {
-            var options = context.RequestServices.GetRequiredService<IdentityServerOptions>();
+            var clock = context.RequestServices.GetRequiredService<ISystemClock>();
 
-            var principal = IdentityServerPrincipal.Create(sub, name, identityProvider, authenticationMethods, options.UtcNow, claims);
+            var principal = IdentityServerPrincipal.Create(sub, name, identityProvider, authenticationMethods, clock.UtcNow.UtcDateTime, claims);
             await context.SignInAsync(await context.GetCookieAuthenticationSchemeAsync(), principal, properties);
         }
     }

@@ -2,9 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-
-using System;
-
 namespace IdentityServer4.Configuration
 {
     /// <summary>
@@ -94,11 +91,5 @@ namespace IdentityServer4.Configuration
         /// The cors options.
         /// </value>
         public CorsOptions Cors { get; set; } = new CorsOptions();
-
-        /// <summary>
-        /// For unit testing.
-        /// </summary>
-        internal DateTime UtcNow => UtcNowFunc();
-        internal Func<DateTime> UtcNowFunc = () => DateTime.UtcNow;
     }
 }

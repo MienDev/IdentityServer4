@@ -72,11 +72,11 @@ namespace Microsoft.AspNetCore.Builder
             }
         }
 
-        static async Task ValidateAsync(IServiceProvider services, ILogger logger)
+        private static async Task ValidateAsync(IServiceProvider services, ILogger logger)
         {
             var schemes = services.GetRequiredService<IAuthenticationSchemeProvider>();
 
-            if ((await schemes.GetDefaultAuthenticateSchemeAsync()) == null)
+            if (await schemes.GetDefaultAuthenticateSchemeAsync() == null)
             {
                 logger.LogWarning("No default authentication scheme has been set. Setting a default scheme is required.");
             }

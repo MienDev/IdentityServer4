@@ -5,8 +5,8 @@
 using IdentityModel;
 using IdentityServer4.Validation;
 using System.Threading.Tasks;
-using IdentityServer4.Configuration;
 using System;
+using Microsoft.AspNetCore.Authentication;
 
 namespace IdentityServer4.Test
 {
@@ -16,18 +16,18 @@ namespace IdentityServer4.Test
     /// <seealso cref="IdentityServer4.Validation.IResourceOwnerPasswordValidator" />
     public class TestUserResourceOwnerPasswordValidator : IResourceOwnerPasswordValidator
     {
-        private readonly IdentityServerOptions _options;
         private readonly TestUserStore _users;
+        private readonly ISystemClock _clock;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestUserResourceOwnerPasswordValidator"/> class.
         /// </summary>
-        /// <param name="options">The options.</param>
         /// <param name="users">The users.</param>
-        public TestUserResourceOwnerPasswordValidator(IdentityServerOptions options, TestUserStore users)
+        /// <param name="clock">The clock.</param>
+        public TestUserResourceOwnerPasswordValidator(TestUserStore users, ISystemClock clock)
         {
-            _options = options;
             _users = users;
+            _clock = clock;
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace IdentityServer4.Test
                 var user = _users.FindByUsername(context.UserName);
                 context.Result = new GrantValidationResult(
                     user.SubjectId ?? throw new ArgumentException("Subject ID not set", nameof(user.SubjectId)), 
-                    OidcConstants.AuthenticationMethods.Password, _options.UtcNow, 
+                    OidcConstants.AuthenticationMethods.Password, _clock.UtcNow.UtcDateTime, 
                     user.Claims);
             }
 

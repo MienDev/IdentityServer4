@@ -20,15 +20,15 @@ namespace IdentityServer4.UnitTests.Services.Default
 {
     public class DefaultUserSessionTests
     {
-        DefaultUserSession _subject;
-        MockHttpContextAccessor _mockHttpContext = new MockHttpContextAccessor();
-        MockAuthenticationSchemeProvider _mockAuthenticationSchemeProvider = new MockAuthenticationSchemeProvider();
-        MockAuthenticationHandlerProvider _mockAuthenticationHandlerProvider = new MockAuthenticationHandlerProvider();
-        MockAuthenticationHandler _mockAuthenticationHandler = new MockAuthenticationHandler();
+        private DefaultUserSession _subject;
+        private MockHttpContextAccessor _mockHttpContext = new MockHttpContextAccessor();
+        private MockAuthenticationSchemeProvider _mockAuthenticationSchemeProvider = new MockAuthenticationSchemeProvider();
+        private MockAuthenticationHandlerProvider _mockAuthenticationHandlerProvider = new MockAuthenticationHandlerProvider();
+        private MockAuthenticationHandler _mockAuthenticationHandler = new MockAuthenticationHandler();
 
-        IdentityServerOptions _options = new IdentityServerOptions();
-        ClaimsPrincipal _user;
-        AuthenticationProperties _props = new AuthenticationProperties();
+        private IdentityServerOptions _options = new IdentityServerOptions();
+        private ClaimsPrincipal _user;
+        private AuthenticationProperties _props = new AuthenticationProperties();
 
         public DefaultUserSessionTests()
         {
@@ -39,7 +39,8 @@ namespace IdentityServer4.UnitTests.Services.Default
                 _mockHttpContext, 
                 _mockAuthenticationSchemeProvider,
                 _mockAuthenticationHandlerProvider,
-                _options, 
+                _options,
+                new StubClock(), 
                 TestLogger.Create<DefaultUserSession>());
         }
 
@@ -64,6 +65,18 @@ namespace IdentityServer4.UnitTests.Services.Default
 
             _props.Items[DefaultUserSession.SessionIdKey].Should().NotBeNull();
             _props.Items[DefaultUserSession.SessionIdKey].Should().Be("999");
+        }
+
+        [Fact]
+        public async Task CreateSessionId_when_props_does_not_contain_key_should_generate_new_sid()
+        {
+            _mockAuthenticationHandler.Result = AuthenticateResult.Success(new AuthenticationTicket(_user, _props, "scheme"));
+
+            _props.Items.ContainsKey(DefaultUserSession.SessionIdKey).Should().BeFalse();
+
+            await _subject.CreateSessionIdAsync(_user, _props);
+
+            _props.Items.ContainsKey(DefaultUserSession.SessionIdKey).Should().BeTrue();
         }
 
         [Fact]

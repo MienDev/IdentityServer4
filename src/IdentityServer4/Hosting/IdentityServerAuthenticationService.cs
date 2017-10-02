@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using IdentityServer4.Configuration;
 using IdentityServer4.Services;
 using Microsoft.Extensions.Logging;
 using IdentityServer4.Configuration.DependencyInjection;
@@ -19,31 +18,30 @@ namespace IdentityServer4.Hosting
     // cookie used for check session iframe for session management spec.
     // finally, we track if signout is called to collaborate with the 
     // FederatedSignoutAuthenticationHandlerProvider for federated signout.
-    class IdentityServerAuthenticationService : IAuthenticationService
+    internal class IdentityServerAuthenticationService : IAuthenticationService
     {
-        private IAuthenticationService _inner;
-        private IAuthenticationSchemeProvider _schemes;
-        private readonly IdentityServerOptions _options;
+        private readonly IAuthenticationService _inner;
+        private readonly IAuthenticationSchemeProvider _schemes;
+        private readonly ISystemClock _clock;
         private readonly IUserSession _session;
-        private ILogger<IdentityServerAuthenticationService> _logger;
+        private readonly ILogger<IdentityServerAuthenticationService> _logger;
 
         public IdentityServerAuthenticationService(
             Decorator<IAuthenticationService> decorator,
             IAuthenticationSchemeProvider schemes,
-            IAuthenticationHandlerProvider handlers,
-            IClaimsTransformation transform,
-            IdentityServerOptions options,
+            ISystemClock clock,
             IUserSession session,
             ILogger<IdentityServerAuthenticationService> logger)
         {
             _inner = decorator.Instance;
+            
             _schemes = schemes;
-            _options = options;
+            _clock = clock;
             _session = session;
             _logger = logger;
         }
 
-        async Task<string> GetCookieAuthenticationSchemeAsync()
+        private async Task<string> GetCookieAuthenticationSchemeAsync()
         {
             var scheme = await _schemes.GetDefaultAuthenticateSchemeAsync();
             if (scheme == null)
@@ -74,7 +72,7 @@ namespace IdentityServer4.Hosting
             _logger.LogDebug("Augmenting SignInContext");
 
             principal.AssertRequiredClaims();
-            principal.AugmentMissingClaims(_options.UtcNow);
+            principal.AugmentMissingClaims(_clock.UtcNow.UtcDateTime);
         }
 
         public async Task SignOutAsync(HttpContext context, string scheme, AuthenticationProperties properties)

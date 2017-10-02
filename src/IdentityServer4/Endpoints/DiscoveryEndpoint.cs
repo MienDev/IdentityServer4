@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using IdentityModel;
 using IdentityServer4.Configuration;
 using IdentityServer4.Endpoints.Results;
 using IdentityServer4.Extensions;
@@ -19,7 +18,7 @@ namespace IdentityServer4.Endpoints
     /// The discovery endpoint
     /// </summary>
     /// <seealso cref="IdentityServer4.Hosting.IEndpointHandler" />
-    class DiscoveryEndpoint : IEndpointHandler
+    internal class DiscoveryEndpoint : IEndpointHandler
     {
         private readonly IdentityServerOptions _options;
         private readonly IDiscoveryResponseGenerator _responseGenerator;
