@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+
+
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -10,7 +14,6 @@ using System;
 
 namespace IdentityServer4.Hosting
 {
-    // todo: review
     // this decorates the real authentication service to detect when the 
     // user is being signed in. this allows us to ensure the user has
     // the claims needed for identity server to do its job. it also allows
@@ -46,7 +49,7 @@ namespace IdentityServer4.Hosting
             var scheme = await _schemes.GetDefaultAuthenticateSchemeAsync();
             if (scheme == null)
             {
-                throw new InvalidOperationException($"No DefaultAuthenticateScheme found.");
+                throw new InvalidOperationException("No DefaultAuthenticateScheme found.");
             }
             return scheme.Name;
         }
@@ -82,7 +85,10 @@ namespace IdentityServer4.Hosting
 
             if ((scheme == null && defaultScheme?.Name == cookieScheme) || scheme == cookieScheme)
             {
+                // this sets a flag used by the FederatedSignoutAuthenticationHandlerProvider
                 context.SetSignOutCalled();
+                
+                // this clears our session id cookie so JS clients can detect the user has signed out
                 await _session.RemoveSessionIdCookieAsync();
             }
 
