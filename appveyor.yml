@@ -1,26 +1,47 @@
 version: 1.0.{build}
+
+image:
+- Visual Studio 2017
+- Ubuntu
+
+environment:
+  APPVEYOR_YML_DISABLE_PS_LINUX: true
+
 branches:
-  only:
-  - dev
+  except:
+  - master
+
 build_script:
 - ps: .\build.ps1
+- sh: ./build.sh
+
 test: off
 artifacts:
-- path: artifacts/packages/*.nupkg
-deploy:
-- provider: NuGet
-  server: https://www.myget.org/F/identity/
-  api_key:
-    secure: 43SK7fLJcrno252Wqb6j+jFYeTjaHG8EWXruhHv6kW+bbySa4uBGTPNFjA7lzD0Y
-  skip_symbols: true
-  on:
-    branch: dev
+- path: nuget/*.nupkg
 
-image: Visual Studio 2017
+deploy: off
+for:
+-
+  matrix:
+    only:
+      - image: Visual Studio 2017
+  services:
+    - mssql2016
+    - mysql
+    - postgresql
+  deploy:
+  - provider: NuGet
+    server: https://www.myget.org/F/identity/
+    api_key:
+      secure: 43SK7fLJcrno252Wqb6j+jFYeTjaHG8EWXruhHv6kW+bbySa4uBGTPNFjA7lzD0Y
+    skip_symbols: true
+    on:
+      branch: dev
 
-#install:
-#  - cmd: curl -O https://download.microsoft.com/download/0/F/D/0FD852A4-7EA1-4E2A-983A-0484AC19B92C/dotnet-sdk-2.0.0-win-x64.exe
-#  - cmd: dotnet-sdk-2.0.0-win-x64.exe /install /quiet /norestart /log install.log 
+services:
+  - mysql               # start MySQL 5.7 x64 service
+  - postgresql          # start PostgreSQL 9.6 service
+ 
 
 #---------------------------------#
 #  Skip builds for doc changes    #

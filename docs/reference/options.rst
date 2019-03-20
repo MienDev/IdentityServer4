@@ -13,7 +13,7 @@ Endpoints
 ^^^^^^^^^
 Allows enabling/disabling individual endpoints, e.g. token, authorize, userinfo etc.
 
-By default all endpoints are enabled, but you can lock down your server by disbling endpoint that you don't need.
+By default all endpoints are enabled, but you can lock down your server by disabling endpoint that you don't need.
 
 Discovery
 ^^^^^^^^^
@@ -35,6 +35,9 @@ Authentication
 * ``CheckSessionCookieName``
     The name of the cookie used for the check session endpoint.
 
+* ``RequireCspFrameSrcForSignout``
+    If set, will require frame-src CSP headers being emitting on the end session callback endpoint which renders iframes to clients for front-channel signout notification. Defaults to true.
+
 Events
 ^^^^^^
 Allows configuring if and which events should be submitted to a registered event sink. See :ref:`here <refEvents>` for more information on events.
@@ -46,8 +49,8 @@ Allows setting length restrictions on various protocol parameters like client id
 UserInteraction
 ^^^^^^^^^^^^^^^
 
-* ``LoginUrl``, ``LogoutUrl``, ``ConsentUrl``, ``ErrorUrl``
-    Sets the the URLs for the login, logout, consent and error pages.
+* ``LoginUrl``, ``LogoutUrl``, ``ConsentUrl``, ``ErrorUrl``, ``DeviceVerificationUrl``
+    Sets the the URLs for the login, logout, consent, error and device verification pages.
 * ``LoginReturnUrlParameter``
     Sets the name of the return URL parameter passed to the login page. Defaults to *returnUrl*.
 * ``LogoutIdParameter``
@@ -58,6 +61,8 @@ UserInteraction
     Sets the name of the error message id parameter passed to the error page. Defaults to *errorId*.
 * ``CustomRedirectReturnUrlParameter``
     Sets the name of the return URL parameter passed to a custom redirect from the authorization endpoint. Defaults to *returnUrl*.
+* ``DeviceVerificationUserCodeParameter``
+    Sets the name of the user code parameter passed to the device verification page. Defaults to *userCode*.
 * ``CookieMessageThreshold``
     Certain interactions between IdentityServer and some UI pages require a cookie to pass state and context (any of the pages above that have a configurable "message id" parameter).
     Since browsers have limits on the number of cookies and their size, this setting is used to prevent too many cookies being created. 
@@ -92,3 +97,21 @@ The underlying CORS implementation is provided from ASP.NET Core, and as such it
 * ``PreflightCacheDuration``
     `Nullable<TimeSpan>` indicating the value to be used in the preflight `Access-Control-Max-Age` response header.
     Defaults to `null` indicating no caching header is set on the response.
+
+CSP (Content Security Policy)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+IdentityServer emits CSP headers for some responses, where appropriate.
+
+* ``Level``
+    The level of CSP to use. CSP Level 2 is used by default, but if older browsers must be supported then this be changed to ``CspLevel.One`` to accomodate them.
+
+* ``AddDeprecatedHeader``
+    Indicates if the older ``X-Content-Security-Policy`` CSP header should also be emitted (in addition to the standards-based header value). Defaults to true.
+
+Device Flow
+^^^^^^^^^^^
+
+* ``DefaultUserCodeType``
+    The user code type to use, unless set at the client level. Defaults to *Numeric*, a 9-digit code.
+* ``Interval``
+    Defines the minimum allowed polling interval on the token endpoint. Defaults to *5*.

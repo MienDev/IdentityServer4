@@ -8,42 +8,30 @@ IdentityServer4 is an OpenID Connect and OAuth 2.0 framework for ASP.NET Core 2.
 
 It enables the following features in your applications:
 
-Authentication as a Service
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Centralized login logic and workflow for all of your applications (web, native, mobile, services).
-IdentityServer is an officially `certified <https://openid.net/certification/>`_ implementation of OpenID Connect.
 
-Single Sign-on / Sign-out
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Single sign-on (and out) over multiple application types.
+| **Authentication as a Service** 
+| Centralized login logic and workflow for all of your applications (web, native, mobile, services). IdentityServer is an officially `certified <https://openid.net/certification/>`_ implementation of OpenID Connect.
 
-Access Control for APIs
-^^^^^^^^^^^^^^^^^^^^^^^
-Issue access tokens for APIs for various types of clients, e.g. server to server, web applications, SPAs and
-native/mobile apps.
+| **Single Sign-on / Sign-out** 
+| Single sign-on (and out) over multiple application types.
 
-Federation Gateway
-^^^^^^^^^^^^^^^^^^
-Support for external identity providers like Azure Active Directory, Google, Facebook etc.
-This shields your applications from the details of how to connect to these external providers.
+| **Access Control for APIs** 
+| Issue access tokens for APIs for various types of clients, e.g. server to server, web applications, SPAs and native/mobile apps.
 
-Focus on Customization
-^^^^^^^^^^^^^^^^^^^^^^
-The most important part - many aspect of IdentityServer can be customized to fit **your** needs.
-Since IdentityServer is a framework and not a boxed product or a SaaS, you can write code to adapt the system the way it makes sense for your scenarios.
+| **Federation Gateway**
+| Support for external identity providers like Azure Active Directory, Google, Facebook etc. This shields your applications from the details of how to connect to these external providers.
 
-Mature Open Source
-^^^^^^^^^^^^^^^^^^
-IdentityServer uses the permissive `Apache 2 <https://www.apache.org/licenses/LICENSE-2.0>`_ license that allows building commercial products on top of it. 
-It is also part of the `.NET Foundation <https://dotnetfoundation.org/>`_ which provides governance and legal backing.
+| **Focus on Customization**
+| The most important part - many aspects of IdentityServer can be customized to fit **your** needs. Since IdentityServer is a framework and not a boxed product or a SaaS, you can write code to adapt the system the way it makes sense for your scenarios.
 
-Free and Commercial Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If you need help building or running your identity platform, :ref:`let us know <refSupport>`.
-There are several ways we can help you out.
+| **Mature Open Source**
+| IdentityServer uses the permissive `Apache 2 <https://www.apache.org/licenses/LICENSE-2.0>`_ license that allows building commercial products on top of it. It is also part of the `.NET Foundation <https://dotnetfoundation.org/>`_ which provides governance and legal backing.
+
+| **Free and Commercial Support**
+| If you need help building or running your identity platform, :ref:`let us know <refSupport>`. There are several ways we can help you out.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Introduction
 
@@ -57,7 +45,7 @@ There are several ways we can help you out.
    intro/contributing
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Quickstarts
 
@@ -67,13 +55,13 @@ There are several ways we can help you out.
    quickstarts/3_interactive_login
    quickstarts/4_external_authentication
    quickstarts/5_hybrid_and_api_access
-   quickstarts/6_aspnet_identity
-   quickstarts/7_javascript_client
-   quickstarts/8_entity_framework
+   quickstarts/6_javascript_client
+   quickstarts/7_entity_framework
+   quickstarts/8_aspnet_identity
    quickstarts/community
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Configuration
 
@@ -84,7 +72,7 @@ There are several ways we can help you out.
    configuration/apis
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Topics
 
@@ -110,13 +98,15 @@ There are several ways we can help you out.
    topics/resource_owner
    topics/refresh_tokens
    topics/reference_tokens
+   topics/custom_token_request_validation
    topics/cors
    topics/discovery
+   topics/add_apis
    topics/add_protocols
    topics/tools
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Endpoints
 
@@ -124,12 +114,13 @@ There are several ways we can help you out.
    endpoints/authorize
    endpoints/token
    endpoints/userinfo
+   endpoints/device_authorization
    endpoints/introspection
    endpoints/revocation
    endpoints/endsession
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Reference
 
@@ -139,12 +130,13 @@ There are several ways we can help you out.
    reference/grant_validation_result
    reference/profileservice
    reference/interactionservice
+   reference/deviceflow_interactionservice
    reference/options
    reference/ef
    reference/aspnet_identity
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :hidden:
    :caption: Misc
 

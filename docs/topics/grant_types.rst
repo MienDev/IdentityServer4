@@ -9,6 +9,7 @@ The OpenID Connect and OAuth 2 specs define the following grant types:
 * Hybrid
 * Client credentials
 * Resource owner password
+* Device flow
 * Refresh tokens
 * Extension grants
 
@@ -66,8 +67,10 @@ or authentication and access token requests (JavaScript applications).
 
 In the implicit flow, all tokens are transmitted via the browser, and advanced features like refresh tokens are thus not allowed.
 
-:ref:`This <refImplicitQuickstart>` quickstart shows authentication for service-side web apps, and 
+:ref:`This <refImplicitQuickstart>` quickstart shows authentication for server-side web apps, and 
 :ref:`this <refJavaScriptQuickstart>` shows JavaScript.
+
+.. Note:: For JavaScript-based applications, Implicit is not recommended anymore. Use Authorization Code with PKCE instead.
 
 Authorization code
 ==================
@@ -91,6 +94,12 @@ for server-side web applications and native desktop/mobile applications.
 
 See :ref:`this <refHybridQuickstart>` quickstart for more information about using hybrid flow with MVC. 
 
+Device flow
+===========
+Device flow is designed for browserless and input constrained devices, where the device is unable to securely capture user credentials. This flow outsources user authentication and consent to an external device (e.g. a smart phone).
+
+This flow is typically used by IoT devices and can request both identity and API resources.
+
 Refresh tokens
 ==============
 Refresh tokens allow gaining long lived access to APIs.
@@ -101,8 +110,8 @@ over and over again with doing a front-channel roundtrips to IdentityServer for 
 Refresh tokens allow requesting new access tokens without user interaction. Every time the client refreshes a token it needs to make an 
 (authenticated) back-channel call to IdentityServer. This allows checking if the refresh token is still valid, or has been revoked in the meantime.
 
-Refresh tokens are supported in hybrid, authorization code and resource owner password flows. 
-To request a refresh token, the client needs to include the ``offline_access`` scope in the token request (and must be authorized to for that scope). 
+Refresh tokens are supported in hybrid, authorization code, device flow and resource owner password flows. 
+To request a refresh token, the client needs to include the ``offline_access`` scope in the token request (and must be authorized to request for that scope). 
 
 Extension grants
 ================

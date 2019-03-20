@@ -85,15 +85,21 @@ The following events are defined in IdentityServer:
 ``ClientAuthenticationSuccessEvent`` & ``ClientAuthenticationFailureEvent``
     Gets raised for successful/failed client authentication at the token endpoint.
 ``TokenIssuedSuccessEvent`` & ``TokenIssuedFailureEvent``
-    Gets raised for successful/failed attempts to request identity tokens, access tokens, refresh tokens and authorization codes.
+    Gets raised for successful/failed attempts to request identity tokens, access tokens, refresh tokens and authorization codes.
+``TokenIntrospectionSuccessEvent`` & ``TokenIntrospectionFailureEvent``
+    Gets raised for successful token introspection requests.
 ``TokenRevokedSuccessEvent``
     Gets raised for successful token revocation requests.
 ``UserLoginSuccessEvent`` & ``UserLoginFailureEvent``
     Gets raised by the quickstart UI for successful/failed user logins.
 ``UserLogoutSuccessEvent``
     Gets raised for successful logout requests.
+``ConsentGrantedEvent`` & ``ConsentDeniedEvent``
+    Gets raised in the consent UI.
 ``UnhandledExceptionEvent``
     Gets raised for unhandled exceptions.
+``DeviceAuthorizationFailureEvent`` & ``DeviceAuthorizationSuccessEvent``
+    Gets raised for successful/failed device authorization requests.
 
 Custom events
 ^^^^^^^^^^^^^
