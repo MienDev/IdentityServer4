@@ -20,7 +20,7 @@ Basics
 ``AllowedGrantTypes``
     Specifies the grant types the client is allowed to use. Use the ``GrantTypes`` class for common combinations.
 ``RequirePkce``
-    Specifies whether clients using an authorization code based grant type must send a proof key
+    Specifies whether clients using an authorization code based grant type must send a proof key (defaults to ``true``).
 ``AllowPlainTextPkce``
     Specifies whether clients using PKCE can use a plain text code challenge (not recommended - and default to ``false``)
 ``RedirectUris``
@@ -54,12 +54,17 @@ Authentication/Logout
     Specifies if this client can use local accounts, or external IdPs only. Defaults to `true`.
 ``IdentityProviderRestrictions``
     Specifies which external IdPs can be used with this client (if list is empty all IdPs are allowed). Defaults to empty.
+``UserSsoLifetime`` `added in 2.3`
+    The maximum duration (in seconds) since the last time the user authenticated. Defaults to ``null``.
+    You can adjust the lifetime of a session token to control when and how often a user is required to reenter credentials instead of being silently authenticated, when using a web application.
 
 Token
 ^^^^^
 
 ``IdentityTokenLifetime``
     Lifetime to identity token in seconds (defaults to 300 seconds / 5 minutes)
+``AllowedIdentityTokenSigningAlgorithms``
+    List of allowed signing algorithms for identity token. If empty, will use the server default signing algorithm.
 ``AccessTokenLifetime``
     Lifetime of access token in seconds (defaults to 3600 seconds / 1 hour)
 ``AuthorizationCodeLifetime``
@@ -71,7 +76,7 @@ Token
 ``RefreshTokenUsage``
     ``ReUse`` the refresh token handle will stay the same when refreshing tokens
     
-    ``OneTime`` the refresh token handle will be updated when refreshing tokens
+    ``OneTime`` the refresh token handle will be updated when refreshing tokens. This is the default.
 ``RefreshTokenExpiration``
     ``Absolute`` the refresh token will expire on a fixed point in time (specified by the AbsoluteRefreshTokenLifetime)
     
@@ -99,9 +104,9 @@ Consent Screen
 ^^^^^^^^^^^^^^
 
 ``RequireConsent``
-    Specifies whether a consent screen is required. Defaults to `true`.
+    Specifies whether a consent screen is required. Defaults to ``false``.
 ``AllowRememberConsent``
-    Specifies whether user can choose to store consent decisions. Defaults to `true`.
+    Specifies whether user can choose to store consent decisions. Defaults to ``true``.
 ``ConsentLifetime``
     Lifetime of a user consent in seconds. Defaults to null (no expiration).
 ``ClientName``
@@ -110,3 +115,11 @@ Consent Screen
     URI to further information about client (used on consent screen)
 ``LogoUri``
     URI to client logo (used on consent screen)
+
+Device flow
+^^^^^^^^^^^
+
+``UserCodeType``
+    Specifies the type of user code to use for the client. Otherwise falls back to default.
+``DeviceCodeLifetime``
+    Lifetime to device code in seconds (defaults to 300 seconds / 5 minutes)

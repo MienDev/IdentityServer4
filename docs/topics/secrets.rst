@@ -17,7 +17,7 @@ The following code sets up a hashed shared secret::
 
     var secret = new Secret("secret".Sha256());
 
-This secret can now be assigned to either a ``Client`` or a ``Scope``. 
+This secret can now be assigned to either a ``Client`` or an ``ApiResource``. 
 Notice that both do not only support a single secret, but multiple. This is useful for secret rollover and rotation::
 
     var client = new Client
@@ -80,10 +80,10 @@ Secret extensibility typically consists of three things:
 * a secret parser that knows how to extract the secret from the incoming request
 * a secret validator that knows how to validate the parsed secret based on the definition
 
-Secret parsers and validators are implementatios of the ``ISecretParser`` and ``ISecretValidator`` interfaces. 
+Secret parsers and validators are implementations of the ``ISecretParser`` and ``ISecretValidator`` interfaces. 
 To make them available to IdentityServer, you need to register them with the DI container, e.g.::
 
-    builder.AddSecretParser<ClientAssertionSecretParser>()
+    builder.AddSecretParser<JwtBearerClientAssertionSecretParser>()
     builder.AddSecretValidator<PrivateKeyJwtSecretValidator>()
 
 Our default private key JWT secret validator expects the full (leaf) certificate as base64 on the secret definition.

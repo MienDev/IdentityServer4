@@ -14,28 +14,17 @@ General feedback and discussions?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Please start a discussion on the `core repo issue tracker <https://github.com/IdentityServer/IdentityServer4/issues>`_.
 
-Platform
-^^^^^^^^
-IdentityServer is built against ASP.NET Core 2 and runs on .NET Framework 4.6.1 (and higher) and .NET Core 2 (and higher).
-
 Bugs and feature requests?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Please log a new issue in the appropriate GitHub repo:
 
 * `Core <https://github.com/IdentityServer/IdentityServer4>`_
-* `Samples <https://github.com/IdentityServer/IdentityServer4.Samples>`_
 * `AccessTokenValidation <https://github.com/IdentityServer/IdentityServer4.AccessTokenValidation>`_
-
-Other discussions
-^^^^^^^^^^^^^^^^^
-https://gitter.im/IdentityServer/IdentityServer4
 
 Contributing code and content
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You will need to sign a Contributor License Agreement before you can contribute any code or content.
 This is an automated process that will start after you opened a pull request. 
-
-.. Note:: **We only accept PRs to the dev branch.**
 
 Contribution projects
 ^^^^^^^^^^^^^^^^^^^^^
@@ -46,8 +35,10 @@ We generally don't want to take ownership of those contribution libraries, we ar
 
 **Naming conventions**
 
-If you publish nuget packages that contribute to IdentityServer, we would like to ask you to **not** use the IdentityServer4 prefix - rather use a suffix, e.g.
+As of October 2017, the IdentityServer4.* nuget namespace is reserved for our packages. Please use the following naming conventions:
 
-**good** MyProject.MongoDb.IdentityServer4
+``YourProjectName.IdentityServer4``
 
-**bad** IdentityServer4.MongoDb
+or
+
+``IdentityServer4.Contrib.YourProjectName``

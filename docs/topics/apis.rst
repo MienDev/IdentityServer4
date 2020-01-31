@@ -8,6 +8,7 @@ Popular libraries are e.g.:
 
 * `JWT bearer authentication handler <https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer/>`_ for ASP.NET Core
 * `JWT bearer authentication middleware <https://www.nuget.org/packages/Microsoft.Owin.Security.Jwt>`_ for Katana
+* `IdentityServer authentication middleware <https://identityserver.github.io/Documentation/docsv2/consuming/overview.html>`_ for Katana 
 * `jsonwebtoken <https://www.npmjs.com/package/jsonwebtoken>`_ for nodejs
 
 Protecting a ASP.NET Core-based API is only a matter of configuring the JWT bearer authentication handler in DI, and adding the authentication middleware to the pipeline::
@@ -105,7 +106,7 @@ Typically, you don't want to do a roundtrip to the introspection endpoint for ea
         options.CacheDuration = TimeSpan.FromMinutes(10); // that's the default
     })
 
-The handler will use whatever `IDistributedCache` implementation is registered in the DI container (e.g. the standad `IDistributedInMemoryCache`).
+The handler will use whatever `IDistributedCache` implementation is registered in the DI container (e.g. the standard `MemoryDistributedCache`).
 
 Validating scopes
 ^^^^^^^^^^^^^^^^^
